@@ -4,15 +4,17 @@ Example launch file: launches the scan matcher with pre-recorded data
 
 <launch>
 
-  <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser"
-    args="0.0 0.0 0.0 0.0 0.0 0.0 hokuyo_laser_link laser 10" />
+<!--   <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser"
+    args="0.0 0.0 0.0 0.0 0.0 0.0 hokuyo_laser_link laser 10" /> -->
 <!--       <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser"
     args="0.0 0.0 0.0 0.0 0.0 0.0 base_link laser 100" /> -->
 
+  <node name="pose2D_2_posestamped" pkg="slam" type="pose2D_2_posestamped.py" respawn="true" output="screen"/>
 
   <node pkg="laser_scan_matcher" type="laser_scan_matcher_node"
     name="laser_scan_matcher_node" output="screen">
-    <param name="publish_tf"        value="true"/>
+    <param name="use_vel"        value="true"/>
+    <param name="publish_tf"        value="false"/>
     <param name="max_iterations" value="10"/>
   </node>
 
