@@ -4,16 +4,28 @@ Example launch file: launches the scan matcher with pre-recorded data
 
 <launch>
 
-  <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser"
-    args="0.0 0.0 0.0 0.0 0.0 0.0 hokuyo_laser_link laser 10" />
-<!--       <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser"
-    args="0.0 0.0 0.0 0.0 0.0 0.0 base_link laser 100" /> -->
 
+<!--   <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser"
+    args="0.0 0.0 0.0 0.0 0.0 0.0 hokuyo_laser_link laser 10" /> -->
+		<node pkg="tf" type="static_transform_publisher" name="map_to_world"
+    args="0.0 0.0 0.0 0.0 0.0 0.0 map world 100" />
+
+
+  <remap from="/vel" to="/cmd_vel"/>
 
   <node pkg="laser_scan_matcher" type="laser_scan_matcher_node"
-    name="laser_scan_matcher_node" output="screen">
-    <param name="publish_tf"        value="true"/>
+    name="laser_scan_matcher_node_mrorton" output="screen">
+    <param name="fixed_frame"        value="map"/>
+    <param name="base_frame"        value="base_link"/>
+
+    <param name="use_vel"        value="true"/>
+
+    <param name="publish_tf"        value="false"/>
     <param name="max_iterations" value="10"/>
   </node>
+
+
+  <node pkg="rviz" type="rviz" name="rviz_mrorton"
+        args="-d $(find slam)/rvis/xwam.rviz"/>
 
 </launch>
