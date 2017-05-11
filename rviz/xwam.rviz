@@ -9,10 +9,11 @@ Panels:
         - /LaserScan1
         - /LaserScan1/Status1
         - /Pose1
-        - /Pose1/Status1
         - /TF1
         - /TF1/Frames1
         - /TF1/Tree1
+        - /Pose2
+        - /Pose2/Status1
       Splitter Ratio: 0.5
     Tree Height: 397
   - Class: rviz/Selection
@@ -117,6 +118,8 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        axis_camera_optical_frame:
+          Value: true
         back_left_wheel:
           Value: false
         back_right_wheel:
@@ -135,11 +138,21 @@ Visualization Manager:
           Value: false
         laser:
           Value: false
+        map:
+          Value: true
         odom:
           Value: false
         rover_link:
           Value: false
-        world:
+        wam_bhand_base_link:
+          Value: true
+        wam_bhand_finger3_link_1:
+          Value: true
+        wam_link_7:
+          Value: true
+        wam_link_base:
+          Value: true
+        wam_link_tcp:
           Value: true
         xtion_pro_cam_depth_frame:
           Value: false
@@ -157,33 +170,35 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        odom:
-          base_footprint:
-            base_link:
-              back_left_wheel:
-                {}
-              back_right_wheel:
-                {}
-              front_left_wheel:
-                {}
-              front_right_wheel:
-                {}
-              rover_link:
-                hokuyo_laser_link:
-                  laser:
-                    {}
-                xtion_pro_cam_rgb_frame:
-                  xtion_pro_cam_depth_frame:
-                    xtion_pro_cam_depth_optical_frame:
+        map:
+          odom:
+            base_footprint:
+              base_link:
+                back_left_wheel:
+                  {}
+                back_right_wheel:
+                  {}
+                front_left_wheel:
+                  {}
+                front_right_wheel:
+                  {}
+                rover_link:
+                  hokuyo_laser_link:
+                    laser:
                       {}
-                  xtion_pro_cam_link:
+                  wam_link_base:
                     {}
-                  xtion_pro_cam_rgb_optical_frame:
-                    {}
-          imu:
-            {}
-        world:
-          {}
+                  xtion_pro_cam_rgb_frame:
+                    xtion_pro_cam_depth_frame:
+                      xtion_pro_cam_depth_optical_frame:
+                        {}
+                    xtion_pro_cam_link:
+                      {}
+                    xtion_pro_cam_rgb_optical_frame:
+                      axis_camera_optical_frame:
+                        {}
+            imu:
+              {}
       Update Interval: 0
       Value: true
     - Arrow Length: 0.3
@@ -194,10 +209,25 @@ Visualization Manager:
       Topic: /tag_detections_pose
       Unreliable: false
       Value: false
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.1
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.3
+      Head Radius: 0.1
+      Name: Pose
+      Shaft Length: 1
+      Shaft Radius: 0.05
+      Shape: Arrow
+      Topic: /laser_scanner_pose
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: world
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
@@ -218,7 +248,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.02738
+      Distance: 7.21466
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -230,10 +260,10 @@ Visualization Manager:
         Z: 0
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.795398
+      Pitch: 1.0748
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.2904
+      Yaw: 4.88543
     Saved: ~
 Window Geometry:
   Displays:
