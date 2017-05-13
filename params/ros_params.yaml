@@ -4,6 +4,10 @@ slam_ros_loop_rate: 100
 # Frame ID 
 frame_id: map
 
+# TF frames for getting the transform from base link to camera
+target_frame: base_link
+source_frame: axis_camera_optical_frame
+
 # Topic and Queue Size Parameters
 
 # NOTE: All SLAM topics should not have a / before it, all robot topics should
@@ -15,6 +19,14 @@ landmark_meas_topic: /tag_detections
 landmark_meas_queue_size: 10
 
 # SLAM Topics
+# Topic for Estimated Robot Pose (from SLAM node)
+est_robot_pose_topic: est_robot_pose
+est_robot_queue_size: 1
+
+# Laser Scan Matcher TF Frames
+fixed_frame: map
+base_frame: base_link
+
 # Topic for Odometry Measurements (from preprocessing node)
 odom_meas_topic: odom_meas_topic
 # Queue size for Odometry Measurements
