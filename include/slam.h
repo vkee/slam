@@ -53,6 +53,9 @@ class Slam
     // Callback for receiving the landmark measurement msg
     void land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg);
 
+    // Publisher of estimated robot pose
+    ros::Publisher est_robot_pose_pub_;
+
     // Converts a ROS Geometry Pose msg into a Pose2D struct Matrix3 (flattens the 6DoF pose to Pose2D)
     slam::Localization::Pose2D pose_stamped_msg_2_pose2d(geometry_msgs::PoseStamped pose_stamped_msg);
 

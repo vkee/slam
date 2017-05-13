@@ -88,8 +88,17 @@ void Slam::setup_subs_pubs_srvs()
     ROS_FATAL("Landmark Measurement subscriber not loaded");
   }
 
-  // Publisher for display pose estimate (PoseStamped so can see in RVIZ?)
-
+  // Publisher of estimated robot pose
+  std::string est_robot_pose_topic;
+  int est_robot_queue_size;
+  if (nh_.getParam("est_robot_pose_topic", est_robot_pose_topic) && nh_.getParam("est_robot_queue_size", est_robot_queue_size))
+  {
+    est_robot_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(est_robot_pose_topic, est_robot_queue_size, true);
+  }
+  else
+  {
+    ROS_FATAL("Estimated Robot Pose publisher not loaded");
+  }
 }
 
 // Looks up transform from camera to the robot base link 
@@ -151,11 +160,11 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
   // Optimize the factor graph
   localization_.optimize_factor_graph();
 
-
-
+  // Get the estimated robot pose
+  slam::Localization::Pose2D est_robot_pose = localization_.get_est_robot_pose();
 
   // Publish pose estimate
-
+  est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose));
 }
 
 // Converts a ROS Geometry Pose msg into a Pose2D struct (flattens the 6DoF pose to Pose2D)

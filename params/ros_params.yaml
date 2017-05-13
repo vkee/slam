@@ -15,6 +15,10 @@ landmark_meas_topic: /tag_detections
 landmark_meas_queue_size: 10
 
 # SLAM Topics
+# Topic for Estimated Robot Pose (from SLAM node)
+est_robot_pose_topic: est_robot_pose
+est_robot_queue_size: 1
+
 # Topic for Odometry Measurements (from preprocessing node)
 odom_meas_topic: odom_meas_topic
 # Queue size for Odometry Measurements

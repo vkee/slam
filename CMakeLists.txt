@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 	tf
 	tf_conversions
 	slam_backend
+	apriltags_ros
 )
 # include_directories(include ${catkin_INCLUDE_DIRS})
 ## System dependencies are found with CMake's conventions
