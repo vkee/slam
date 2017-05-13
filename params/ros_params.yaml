@@ -1,6 +1,9 @@
 # Rate to run the SLAM ROS Node
 slam_ros_loop_rate: 100
 
+# Frame ID 
+frame_id: map
+
 # Topic and Queue Size Parameters
 
 # NOTE: All SLAM topics should not have a / before it, all robot topics should

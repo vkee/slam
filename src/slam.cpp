@@ -158,76 +158,12 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
 }
 
-
-
-// // Moves the robot, updates the state estimates, and updates the visualization
-// bool Slam::move_robot(perception_msgs::OdomCommand::Request &req, perception_msgs::OdomCommand::Response &resp)
-// {
-//   ROS_INFO("Starting Move Robot Service Call...");
-
-//   // Getting the robot's true pose
-//   visualization_msgs::Marker::ConstPtr true_robot_marker_msg = ros::topic::waitForMessage<visualization_msgs::Marker>(true_robot_marker_topic_, nh_);
-//   geometry_msgs::Pose true_robot_pose_msg = true_robot_marker_msg->pose;
-//   // Transform from the global to the robot frame
-//   Eigen::Matrix4f global_T_robot_curr = pose_msg_2_transform(true_robot_pose_msg);
-//   std::cout << "global_T_robot_curr: " << global_T_robot_curr << std::endl;
-
-//   // Get the commanded odometry from the service call
-//   geometry_msgs::Pose commanded_odometry_msg = req.odom_command;
-//   std::cout << "commanded_odometry: " << commanded_odometry_msg << std::endl;
-//   // Transform from the current robot pose to the next robot pose
-//   Eigen::Matrix4f robot_curr_T_robot_next = pose_msg_2_transform(commanded_odometry_msg);
-//   // Transform from the global to the next robot pose
-//   Eigen::Matrix4f global_T_robot_next = global_T_robot_curr * robot_curr_T_robot_next;
-//   std::cout << "global_T_robot_next: " << global_T_robot_next << std::endl;
-
-//   // Publish the true robot pose
-//   true_robot_marker_pub_.publish(transform_2_robot_marker_msg(global_T_robot_next, true));
-
-//   // Update factor graph and publish the estimated robot pose
-//   Eigen::Matrix4f global_T_est_robot_pose = localization_.add_odom_measurement(robot_curr_T_robot_next);
-//   est_robot_marker_pub_.publish(transform_2_robot_marker_msg(global_T_est_robot_pose, false));
-
-//   ROS_INFO("Done handling Move Robot Service Call...");
-// }
-
-// // Takes a landmark measurement, updates the state estimates, and updates the visualization
-// bool Slam::take_measurement(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp)
-// {
-//   ROS_INFO("Starting Take Measurement Service Call...");
-
-//   // Getting the robot's true pose
-//   visualization_msgs::Marker::ConstPtr true_robot_marker_msg = ros::topic::waitForMessage<visualization_msgs::Marker>(true_robot_marker_topic_, nh_);
-//   geometry_msgs::Pose true_robot_pose_msg = true_robot_marker_msg->pose;
-//   // Transform from the global to the robot frame
-//   Eigen::Matrix4f global_T_robot = pose_msg_2_transform(true_robot_pose_msg);
-//   std::cout << "global_T_robot_curr: " << global_T_robot << std::endl;
-
-//   // Getting the landmarks's true pose
-//   visualization_msgs::Marker::ConstPtr true_landmark_marker_msg = ros::topic::waitForMessage<visualization_msgs::Marker>(true_landmark_marker_topic_, nh_);
-//   geometry_msgs::Pose true_landmark_pose_msg = true_landmark_marker_msg->pose;
-//   // Transform from the global to the landmark frame
-//   Eigen::Matrix4f global_T_landmark = pose_msg_2_transform(true_landmark_pose_msg);
-//   std::cout << "global_T_landmark: " << global_T_landmark << std::endl;
-
-//   // Transform from the robot to the landmark
-//   Eigen::Matrix4f robot_T_landmark = global_T_robot.inverse() * global_T_landmark;
-
-//   // Update factor graph and publish the estimated robot and landmark poses
-//   Eigen::Matrix4f est_landmark_pose = localization_.add_landmark_measurement(robot_T_landmark);
-//   est_landmark_marker_pub_.publish(transform_2_landmark_marker_msg(est_landmark_pose, false));
-//   Eigen::Matrix4f est_robot_pose = localization_.get_est_robot_pose();
-//   est_robot_marker_pub_.publish(transform_2_robot_marker_msg(est_robot_pose, false));
-
-//   ROS_INFO("Done handling Take Measurement Service Call...");
-// }
-
-// Converts a ROS Geometry Pose msg into a Pose2D struct Matrix3 (flattens the 6DoF pose to Pose2D)
+// Converts a ROS Geometry Pose msg into a Pose2D struct (flattens the 6DoF pose to Pose2D)
 slam::Localization::Pose2D Slam::pose_stamped_msg_2_pose2d(geometry_msgs::PoseStamped pose_stamped_msg)
 {
   // Convert landmark to transform
   geometry_msgs::Point position = pose_stamped_msg.pose.position;
-  geometry_msgs::Quaternion quat = pose_stamped_msg.pose.orientation;
+  geometry_msgs::Quaternion orientation = pose_stamped_msg.pose.orientation;
 
   tf::Quaternion tf_quat;
   tf::quaternionMsgToTF(quat, tf_quat);
@@ -240,6 +176,34 @@ slam::Localization::Pose2D Slam::pose_stamped_msg_2_pose2d(geometry_msgs::PoseSt
   pose2d.theta = yaw;
 
   return pose2d;
+}
+
+// Converts a Pose2D struct into a ROS Geometry Pose msg
+geometry_msgs::PoseStamped Slam::pose2d_2_pose_stamped_msg(slam::Localization::Pose2D pose2d)
+{
+  pose2d
+
+  geometry_msgs::PoseStamped pose_stamped_msg;
+  pose_stamped_msg.header.frame_id = frame_id_;
+
+  // Convert landmark to transform
+  geometry_msgs::Point position;
+  position.x = pose2d.x;
+  position.y = pose2d.y;
+  position.z = 0.0;
+  geometry_msgs::Quaternion quat;; = pose_stamped_msg.pose.orientation;
+
+  tf::Quaternion tf_quat;
+  tf::quaternionMsgToTF(quat, tf_quat);
+  double roll, pitch, yaw;
+  tf::Matrix3x3(tf_quat).getRPY(roll, pitch, yaw);
+
+  slam::Localization::Pose2D pose2d;
+  pose2d.x = position.x;
+  pose2d.y = position.y;
+  pose2d.theta = yaw;
+
+  return pose_stamped_msg;
 }
 
 int main(int argc, char** argv)

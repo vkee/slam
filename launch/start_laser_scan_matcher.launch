@@ -3,7 +3,9 @@ Example launch file: launches the scan matcher with pre-recorded data
 -->
 
 <launch>
-
+  <!-- Load the parameters -->
+  <rosparam command="load" file="$(find slam)/params/slam_params.yaml"/>
+  <rosparam command="load" file="$(find slam)/params/ros_params.yaml"/>
 
   <node name="pose2D_delta" pkg="slam" type="pose2D_delta.py" respawn="true" output="screen">
     <param name="pose_correction" value="False"/>
