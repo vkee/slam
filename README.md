@@ -16,5 +16,13 @@ roslaunch octomap_server antonio_octomap.launch
 
 Handled by the python script runLaserGeometry.py
 
+### Resetting the map
+
+To do that, import the Empty service and create an object with:
+```python
+from std_srvs.srv import Empty
+resetter = rospy.ServiceProxy('/octomap_server/reset', Empty)
+```
+
 ### TODOs:
 - Need to change "frame_id" from odom (current) to the origin of our SLAM implementation (e.g., slam_map).
