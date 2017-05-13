@@ -38,6 +38,8 @@ def laserScan_callback(msg):
 		PointCloud2
 	'''
 	global wallE, pointCloud2_publisher
+	# change the frame_id:
+	msg.header.frame_id = "/base_footprint"
 	# publish the point cloud
 	pointCloud2_publisher.publish(wallE.projectLaser(msg))
 
