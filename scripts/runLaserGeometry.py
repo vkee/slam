@@ -29,68 +29,30 @@ import sensor_msgs.point_cloud2 as pc2
 from laser_geometry import *
 
 
-
-def laserScan_callback(msg):
-	'''
-	Input: 
-		msg - LaserScan
-	Returns:
-		PointCloud2
-	'''
-	global wallE, pointCloud2_publisher
-	# publish the point cloud
-	pointCloud2_publisher.publish(wallE.projectLaser(msg))
-
+class LaserGeometryProjector():
+	def __init__(self):
+		rospy.init_node('laserToPointCloud2Converter', anonymous=True)
+		# create our converter object:
+		self.wallE = LaserProjection()
+		# subscribers:
+		self.laserScan_sub = rospy.Subscriber('scan', LaserScan, self.laserScan_callback)
+		# publishers:
+		self.pointCloud2_publisher = rospy.Publisher('cloud_in', PointCloud2)
+		rospy.spin()
 
 
+	def laserScan_callback(self, msg):
+		'''
+		Input: 
+			msg - LaserScan
+		Returns:
+			PointCloud2
+		'''
+		# publish the point cloud
+		self.pointCloud2_publisher.publish(self.wallE.projectLaser(msg))
 
-
-
-
-
-'''
-==========================================
-======              MAIN             =====
-==========================================
-'''
-print ""
-print " ==== About to start main ==== "
-print ""
-# Initialize our node with the name:
-rospy.init_node('laserToPointCloud2Converter')
-# create global variable with time 
-now = rospy.get_rostime()
-rospy.loginfo("Current time %i %i", now.secs, now.nsecs)
-currentTime = now.secs + now.nsecs*1e-9
-
-
-# create our converter object:
-wallE = LaserProjection()
+if __name__=="__main__":
+    node = LaserGeometryProjector()
 
 
 
-'''
--------------------------------
----    Topic Subscribers!   ---
--------------------------------
-'''
-# Suscribe to the laser scan topic
-laserScan_sub = rospy.Subscriber('scan', LaserScan, laserScan_callback)
-
-
-'''
--------------------------------
----    Topic Publishers!    ---
--------------------------------
-'''
-# ---- For publishing the point cloud ---------
-pointCloud2_publisher = rospy.Publisher('cloud_in', PointCloud2)
-
-
-
-'''
--------------------------------
----       Infinite Loop     ---
--------------------------------
-'''
-rospy.spin()
