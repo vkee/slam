@@ -163,7 +163,7 @@ slam::Localization::Pose2D Slam::pose_stamped_msg_2_pose2d(geometry_msgs::PoseSt
 {
   // Convert landmark to transform
   geometry_msgs::Point position = pose_stamped_msg.pose.position;
-  geometry_msgs::Quaternion orientation = pose_stamped_msg.pose.orientation;
+  geometry_msgs::Quaternion quat = pose_stamped_msg.pose.orientation;
 
   tf::Quaternion tf_quat;
   tf::quaternionMsgToTF(quat, tf_quat);
@@ -181,8 +181,6 @@ slam::Localization::Pose2D Slam::pose_stamped_msg_2_pose2d(geometry_msgs::PoseSt
 // Converts a Pose2D struct into a ROS Geometry Pose msg
 geometry_msgs::PoseStamped Slam::pose2d_2_pose_stamped_msg(slam::Localization::Pose2D pose2d)
 {
-  pose2d
-
   geometry_msgs::PoseStamped pose_stamped_msg;
   pose_stamped_msg.header.frame_id = frame_id_;
 
@@ -191,17 +189,11 @@ geometry_msgs::PoseStamped Slam::pose2d_2_pose_stamped_msg(slam::Localization::P
   position.x = pose2d.x;
   position.y = pose2d.y;
   position.z = 0.0;
-  geometry_msgs::Quaternion quat;; = pose_stamped_msg.pose.orientation;
-
-  tf::Quaternion tf_quat;
-  tf::quaternionMsgToTF(quat, tf_quat);
-  double roll, pitch, yaw;
-  tf::Matrix3x3(tf_quat).getRPY(roll, pitch, yaw);
-
-  slam::Localization::Pose2D pose2d;
-  pose2d.x = position.x;
-  pose2d.y = position.y;
-  pose2d.theta = yaw;
+  tf::Quaternion quat = tf::createQuaternionFromYaw(pose2d.theta);
+  geometry_msgs::Quaternion orientation;
+  tf::quaternionTFToMsg(quat, orientation);
+  pose_stamped_msg.pose.position = position;
+  pose_stamped_msg.pose.orientation = orientation;
 
   return pose_stamped_msg;
 }

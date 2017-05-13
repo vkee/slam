@@ -56,6 +56,9 @@ class Slam
     // Converts a ROS Geometry Pose msg into a Pose2D struct Matrix3 (flattens the 6DoF pose to Pose2D)
     slam::Localization::Pose2D pose_stamped_msg_2_pose2d(geometry_msgs::PoseStamped pose_stamped_msg);
 
+    // Converts a Pose2D struct into a ROS Geometry Pose msg
+    geometry_msgs::PoseStamped pose2d_2_pose_stamped_msg(slam::Localization::Pose2D pose2d);
+
     // GTSAM Localization library
     slam::Localization localization_;
 
