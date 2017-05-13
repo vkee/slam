@@ -6,7 +6,7 @@ frame_id: map
 
 # TF frames for getting the transform from base link to camera
 target_frame: base_link
-source_frame: camera
+source_frame: axis_camera_optical_frame
 
 # Topic and Queue Size Parameters
 

@@ -2,7 +2,7 @@
 <launch>
 	<!-- Load the parameters -->
 	<rosparam command="load" file="$(find slam)/params/slam_params.yaml"/>
-	<!-- <rosparam command="load" file="$(find slam)/params/ros_params.yaml"/> -->
+	<rosparam command="load" file="$(find slam)/params/ros_params.yaml"/>
  	
  	<node name="slam_node" pkg="slam" type="slam" respawn="true" output="screen"/>
 </launch>
