@@ -26,3 +26,16 @@ resetter = rospy.ServiceProxy('/octomap_server/reset', Empty)
 
 ### TODOs:
 - Need to change "frame_id" from odom (current) to the origin of our SLAM implementation (e.g., slam_map).
+
+
+
+
+
+
+
+## Implemenatation Info:
+- Using apriltags_ros for range and bearing measurements. Need to get apriltags_ros package, and launch node with launch/run_apriltag_detection.launch launch file:
+
+```shell
+roslaunch apriltags_ros run_apriltag_detection.launch
+```
