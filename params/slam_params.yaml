@@ -1,0 +1,22 @@
+
+
+
+
+# iSAM2 Parameters
+# Only relinearize variables whose linear delta magnitude is greater than this threshold (default: 0.1).
+isam2_relinearize_thresh: 0.01
+# Only relinearize any variables every relinearizeSkip calls to ISAM2::update (default: 10) 
+isam2_relinearize_skip: 1
+
+# Standard deviation of the translation components of the robot pose prior
+prior_trans_stddev: 0.01
+# Standard deviation of the rotation components of the robot pose prior
+prior_rot_stddev: 0.01
+# Standard deviation of the translation components of the robot odometry measurements
+odom_trans_stddev: 0.3
+# Standard deviation of the rotation components of the robot odometry measurements
+odom_rot_stddev: 0.1
+# Standard deviation of the translation components of the landmark observations
+land_obs_trans_stddev: 0.5
+# Standard deviation of the rotation components of the landmark observations
+land_obs_rot_stddev: 0.2
