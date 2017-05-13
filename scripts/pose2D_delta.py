@@ -22,7 +22,9 @@ class SendPoseDelta():
 
         self.pose2D_sub = rospy.Subscriber("/pose2D", Pose2D, self.get_pose_delta, queue_size=1)
         self.cmd_vel_sub = rospy.Subscriber("/cmd_vel", Twist, self.update_velocity, queue_size=1)
-        self.pose_delta_pub = rospy.Publisher('/pose2D_detla', Pose2D, queue_size=1)
+        pose_delta_topic = rospy.get_param("odom_meas_topic")
+        pose_delta_queue_size = rospy.get_param("odom_meas_queue_size")
+        self.pose_delta_pub = rospy.Publisher(pose_delta_topic, Pose2D, queue_size=pose_delta_queue_size)
         self.pose_stamped_pub = rospy.Publisher('/estimated_pose', PoseStamped, queue_size=1)
 
         rospy.spin()

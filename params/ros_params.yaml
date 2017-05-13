@@ -15,5 +15,4 @@ landmark_meas_queue_size: 10
 # Topic for Odometry Measurements (from preprocessing node)
 odom_meas_topic: odom_meas_topic
 # Queue size for Odometry Measurements
-odom_meas_queue_size: 10
-
+odom_meas_queue_size: 1
