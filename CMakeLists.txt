@@ -11,10 +11,14 @@ find_package(catkin REQUIRED COMPONENTS
 	sensor_msgs
 	image_transport
 	cv_bridge
+	pcl_conversions
+	pcl_ros
+	pcl_msgs
 	geometry_msgs
 	message_generation
 	tf
 	tf_conversions
+	slam_backend
 )
 # include_directories(include ${catkin_INCLUDE_DIRS})
 ## System dependencies are found with CMake's conventions
@@ -172,6 +176,14 @@ link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Eigen_INCLUDE_DIRS} )
 include_directories(${catkin_INCLUDE_DIRS})
 
+# add_executable (PlanarSLAMiSAM2 src/PlanarSLAMiSAM2.cpp)
+# target_link_libraries (PlanarSLAMiSAM2 ${GTSAM_LIBRARIES})
+
+add_executable (slam src/slam.cpp)
+target_link_libraries (slam ${Eigen_LIBRARIES} ${catkin_LIBRARIES})
+
+# add_executable(registration src/registration.cpp)
+# target_link_libraries(registration ${PCL_LIBRARIES} ${OpenCV_LIBS} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES} ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 #############
 ## Install ##

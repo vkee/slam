@@ -1,0 +1,19 @@
+# Rate to run the SLAM ROS Node
+slam_ros_loop_rate: 100
+
+# Topic and Queue Size Parameters
+
+# NOTE: All SLAM topics should not have a / before it, all robot topics should
+# In order to avoid namespace conflicts with the robot
+
+# Robot/ROS provided Node Topics
+# Topic for Landmark Measurements (from AprilTag ROS node)
+landmark_meas_topic: /tag_detections
+landmark_meas_queue_size: 10
+
+# SLAM Topics
+# Topic for Odometry Measurements (from preprocessing node)
+odom_meas_topic: odom_meas_topic
+# Queue size for Odometry Measurements
+odom_meas_queue_size: 10
+
