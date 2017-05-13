@@ -92,13 +92,14 @@ class SendPoseDelta():
 
 
 
-        # the delta from our velocity will be half the angular and then all the linear added in the new direction
+        # the delta from our velocity will be the angular velocity multiplied by the sample rate
+        # and then the linear velocity multiplied by the sample rate added in the new direction
         # will just be used for loose comparisons against the measured delta
         if self.use_pose_correction:
             calc_delta = Pose2D()
-            calc_delta.theta = 1.0/2.0 * self.prev_vel.angular.x * 0.1  # sample rate is 10 Hz
-            calc_delta.x = 1.0/1.0 * math.cos(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
-            calc_delta.y = 1.0/1.0 * math.sin(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
+            calc_delta.theta = self.prev_vel.angular.x * 0.1  # sample rate is 10 Hz
+            calc_delta.x = math.cos(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
+            calc_delta.y = math.sin(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
 
             self.prev_pose = data
             self.prev_pose_time = pose_at
