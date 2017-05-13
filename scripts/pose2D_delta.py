@@ -9,6 +9,8 @@ class SendPoseDelta():
 
         rospy.init_node("pose2D_2_posestamped_node", anonymous=True)
 
+        self.pose_correction = rospy.get_param('~pose_correction', False)
+
         self.estimated_pose = Pose2D()  # Will allow us to compare how scrapping the values is helping us
         self.got_first_pose = False
 
@@ -94,36 +96,35 @@ class SendPoseDelta():
             print delta
 
 
-        # print "Measured Pose Deta"
-        # print delta
 
-        # the delta from our velocity will be half the angular and then half the linear added in the new direction
+        # the delta from our velocity will be half the angular and then all the linear added in the new direction
         # will just be used for loose comparisons against the measured delta
-        calc_delta = Pose2D()
-        calc_delta.theta = 1.0/2.0 * self.prev_vel.angular.x * 0.1  # sample rate is 10 Hz
-        calc_delta.x = 1.0/2.0 * self.prev_vel.linear.x * math.cos(self.prev_pose.theta + calc_delta.theta)
-        calc_delta.y = 1.0/2.0 * self.prev_vel.linear.x * math.sin(self.prev_pose.theta + calc_delta.theta)
+        if self.pose_correction:
+            calc_delta = Pose2D()
+            calc_delta.theta = 1.0/2.0 * self.prev_vel.angular.x * 0.1  # sample rate is 10 Hz
+            calc_delta.x = 1.0/1.0 * math.cos(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
+            calc_delta.y = 1.0/1.0 * math.sin(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
 
-        self.prev_pose = data
-        self.prev_pose_time = pose_at
+            self.prev_pose = data
+            self.prev_pose_time = pose_at
 
-        # if the pose delta is way off want we predict, we don't want to send it
-        xdiff = abs(delta.x - calc_delta.x)
-        ydiff = abs(delta.y - calc_delta.y)
-        thdiff = abs(delta.theta - calc_delta.theta)
-        if ((xdiff > 2 * abs(calc_delta.x) and xdiff > 0.01) or (ydiff > 2 * abs(calc_delta.y) and ydiff > 0.01) or 
-        (thdiff > 2 * abs(calc_delta.theta) and thdiff > 0.01)):
-            print "POSE DELTA OFF"
-            print ""
-            print "MEASURED"
-            print delta
-            print "Calculated"
-            print calc_delta
+            # if the pose delta is way off want we predict, we don't want to send it
+            xdiff = abs(delta.x - calc_delta.x)
+            ydiff = abs(delta.y - calc_delta.y)
+            thdiff = abs(delta.theta - calc_delta.theta)
+            if ((xdiff > 2 * abs(calc_delta.x) and xdiff > 0.01) or (ydiff > 2 * abs(calc_delta.y) and ydiff > 0.01) or 
+            (thdiff > 2 * abs(calc_delta.theta) and thdiff > 0.01)):
+                print "POSE DELTA OFF"
+                print ""
+                print "MEASURED"
+                print delta
+                print "Calculated"
+                print calc_delta
 
-            self.estimated_pose = Pose2D(x=self.estimated_pose.x+calc_delta.x, y=self.estimated_pose.y+calc_delta.y, 
-                                            theta=self.estimated_pose.theta+calc_delta.theta)
-            self.convert_and_publish()
-            return
+                self.estimated_pose = Pose2D(x=self.estimated_pose.x+1.0/1.0*calc_delta.x, y=self.estimated_pose.y+1.0/1.0*calc_delta.y, 
+                                                theta=self.estimated_pose.theta+1.0/1.0*calc_delta.theta)
+                self.convert_and_publish()
+                return
 
         self.estimated_pose = Pose2D(x=self.estimated_pose.x+delta.x, y=self.estimated_pose.y+delta.y, 
                                         theta=self.estimated_pose.theta+delta.theta)

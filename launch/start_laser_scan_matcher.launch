@@ -5,7 +5,9 @@ Example launch file: launches the scan matcher with pre-recorded data
 <launch>
 
 
-<!--   <node name="pose2D_2_posestamped" pkg="slam" type="pose2D_2_posestamped.py" respawn="true" output="screen"/> -->
+  <node name="pose2D_delta" pkg="slam" type="pose2D_delta.py" respawn="true" output="screen">
+    <param name="pose_correction" value="False"/>
+  </node>
 
 
   <remap from="/vel" to="/cmd_vel"/>
