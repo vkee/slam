@@ -62,20 +62,27 @@ class Slam
     // Converts a Pose2D struct into a ROS Geometry Pose msg
     geometry_msgs::PoseStamped pose2d_2_pose_stamped_msg(slam::Localization::Pose2D pose2d);
 
+    // Converts a ROS Geometry Pose msg into an Eigen transform
+    Eigen::Matrix4f pose_msg_2_transform(geometry_msgs::Pose pose_msg);
+
+    // Converts a ROS Geometry Pose msg into a Pose2D struct (flattens the 6DoF pose to Pose2D)
+    slam::Localization::Pose2D transform_2_pose2d(Eigen::Matrix4f transform);
+
     // GTSAM Localization library
     slam::Localization localization_;
 
     // The frame to display everything in
     std::string frame_id_;
 
-    // ID for the robot marker
-    int robot_marker_id_;
-    // ID for the landmark marker
-    int landmark_marker_id_;
+    // Transform from robot base link to the camera frame
+    Eigen::Matrix4f robot_base_T_cam_;
 
-    // Counters for the robot pose and landmarks
-    int robot_pose_counter_;
-    int landmark_obs_counter_;
+    // TF Object for dealing with reference frames
+    tf::TransformListener tf_listener_;
+    // The source frame for the tf transformLookup
+    std::string source_frame_;
+    // The target frame for the tf transformLookup
+    std::string target_frame_;
 
     double isam2_relinearize_thresh_;
     int isam2_relinearize_skip_;

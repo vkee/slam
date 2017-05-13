@@ -4,6 +4,10 @@ slam_ros_loop_rate: 100
 # Frame ID 
 frame_id: map
 
+# TF frames for getting the transform from base link to camera
+target_frame: base_link
+source_frame: axis_camera_optical_frame
+
 # Topic and Queue Size Parameters
 
 # NOTE: All SLAM topics should not have a / before it, all robot topics should

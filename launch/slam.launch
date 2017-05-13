@@ -1,8 +1,10 @@
 <!-- Launch file for starting the hand labeling pipeline -->
 <launch>
-	<!-- Load the parameters -->
-	<rosparam command="load" file="$(find slam)/params/slam_params.yaml"/>
-	<!-- <rosparam command="load" file="$(find slam)/params/ros_params.yaml"/> -->
- 	
- 	<node name="slam_node" pkg="slam" type="slam" respawn="true" output="screen"/>
+	<group ns="slam">
+		<!-- Load the parameters -->
+		<rosparam command="load" file="$(find slam)/params/slam_params.yaml"/>
+		<rosparam command="load" file="$(find slam)/params/ros_params.yaml"/>
+	 	
+	 	<node name="slam_node" pkg="slam" type="slam" respawn="true" output="screen"/>
+	</group>
 </launch>
