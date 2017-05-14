@@ -82,23 +82,24 @@ class SendPoseDelta():
             self.got_first_pose = True
 
         delta = Pose2D(x=data.x-self.prev_pose.x, y=data.y-self.prev_pose.y, theta=data.theta-self.prev_pose.theta)
-        # if one theta is negative and the other positive, we have to handle wraparound conditions
-        if (data.theta < 0) != (self.prev_pose.theta < 0) and delta.theta > 1:
+        # if one theta is negative and the other positive around theta = pi, we have to handle wraparound conditions
+        if (data.theta < 0) != (self.prev_pose.theta < 0) and abs(delta.theta) > 1:
 
             delta.theta = (abs(data.theta) - math.pi) + (abs(self.prev_pose.theta) - math.pi)
-            if data.theta > 0:
-                # we went from negative to positive which should be a negative angular velocity
+            if data.theta < 0:
+                # we went from positive to negative which should be a positive angular velocity
                 delta.theta = -1* delta.theta
 
 
 
-        # the delta from our velocity will be half the angular and then all the linear added in the new direction
+        # the delta from our velocity will be the angular velocity multiplied by the sample rate
+        # and then the linear velocity multiplied by the sample rate added in the new direction
         # will just be used for loose comparisons against the measured delta
         if self.use_pose_correction:
             calc_delta = Pose2D()
-            calc_delta.theta = 1.0/2.0 * self.prev_vel.angular.x * 0.1  # sample rate is 10 Hz
-            calc_delta.x = 1.0/1.0 * math.cos(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
-            calc_delta.y = 1.0/1.0 * math.sin(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
+            calc_delta.theta = self.prev_vel.angular.x * 0.1  # sample rate is 10 Hz
+            calc_delta.x = math.cos(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
+            calc_delta.y = math.sin(self.prev_pose.theta + calc_delta.theta) * self.prev_vel.linear.x * 0.1
 
             self.prev_pose = data
             self.prev_pose_time = pose_at
