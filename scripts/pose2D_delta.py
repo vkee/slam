@@ -120,6 +120,9 @@ class SendPoseDelta():
                                                 theta=self.estimated_pose.theta + self.angular_scaling*calc_delta.theta )
                 self.convert_and_publish()
                 return
+        else:
+            self.prev_pose = data
+            self.prev_pose_time = pose_at
 
         self.estimated_pose = Pose2D(x=self.estimated_pose.x+delta.x, y=self.estimated_pose.y+delta.y, 
                                         theta=self.estimated_pose.theta+delta.theta)
