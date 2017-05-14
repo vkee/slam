@@ -23,6 +23,10 @@ landmark_meas_queue_size: 10
 est_robot_pose_topic: est_robot_pose
 est_robot_queue_size: 1
 
+# Laser Scan Matcher TF Frames
+fixed_frame: map
+base_frame: base_link
+
 # Topic for Odometry Measurements (from preprocessing node)
 odom_meas_topic: odom_meas_topic
 # Queue size for Odometry Measurements

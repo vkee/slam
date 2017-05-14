@@ -50,16 +50,19 @@ void Slam::get_params()
   nh_.getParam("prior_trans_stddev", prior_trans_stddev_);
   // Standard deviation of the rotation components of the robot pose prior
   nh_.getParam("prior_rot_stddev", prior_rot_stddev_);
+  prior_rot_stddev_ = deg_2_rad(prior_rot_stddev_);
 
   // Standard deviation of the translation components of the odometry measurements
   nh_.getParam("odom_trans_stddev", odom_trans_stddev_);
   // Standard deviation of the rotation components of the odometry measurements
   nh_.getParam("odom_rot_stddev", odom_rot_stddev_);
+  odom_rot_stddev_ = deg_2_rad(odom_rot_stddev_);
 
   // Standard deviation of the translation components of the landmark observations
   nh_.getParam("land_obs_trans_stddev", land_obs_trans_stddev_);
   // Standard deviation of the rotation components of the landmark observations
   nh_.getParam("land_obs_rot_stddev", land_obs_rot_stddev_);
+  land_obs_rot_stddev_ = deg_2_rad(land_obs_rot_stddev_);
 
   // The source frame for the tf transformLookup
   nh_.getParam("source_frame", source_frame_);
@@ -151,10 +154,10 @@ void Slam::init_localization()
 // Callback for receiving the odometry msg
 void Slam::odom_meas_cb(const geometry_msgs::Pose2DConstPtr& msg)
 {
-  std::cout << "Here" << std::endl;
   // NOTE: if too slow, to do this whole optimize, could probably just concatenate the odom on top of the est state to get new est robot pose state
 
   geometry_msgs::Pose2D odom_meas_msg = *msg;
+  std::cout << "odom_meas_msg: " << odom_meas_msg << std::endl;
   // Adding the odometry measurement to the factor graph and optimizing the graph
   slam::Localization::Pose2D est_robot_pose = localization_.add_odom_measurement(odom_meas_msg.x, odom_meas_msg.y, odom_meas_msg.theta);
 
@@ -284,6 +287,18 @@ Eigen::Matrix4f Slam::pose_msg_2_transform(geometry_msgs::Pose pose_msg)
   transform.topRightCorner(3,1) = trans;
 
   return transform;
+}
+
+// Converts degrees to radians
+double Slam::deg_2_rad(double input)
+{
+  return input*M_PI/180.0;
+}
+
+// Converts radians to degrees
+double Slam::rad_2_deg(double input)
+{
+  return input*180.0/M_PI;
 }
 
 int main(int argc, char** argv)
