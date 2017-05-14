@@ -68,6 +68,12 @@ class Slam
     // Converts a ROS Geometry Pose msg into a Pose2D struct (flattens the 6DoF pose to Pose2D)
     slam::Localization::Pose2D transform_2_pose2d(Eigen::Matrix4f transform);
 
+    // Converts degrees to radians
+    double deg_2_rad(double input);
+
+    // Converts radians to degrees
+    double rad_2_deg(double input);
+
     // GTSAM Localization library
     slam::Localization localization_;
 

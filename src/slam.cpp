@@ -50,16 +50,19 @@ void Slam::get_params()
   nh_.getParam("prior_trans_stddev", prior_trans_stddev_);
   // Standard deviation of the rotation components of the robot pose prior
   nh_.getParam("prior_rot_stddev", prior_rot_stddev_);
+  prior_rot_stddev_ = deg_2_rad(prior_rot_stddev_);
 
   // Standard deviation of the translation components of the odometry measurements
   nh_.getParam("odom_trans_stddev", odom_trans_stddev_);
   // Standard deviation of the rotation components of the odometry measurements
   nh_.getParam("odom_rot_stddev", odom_rot_stddev_);
+  odom_rot_stddev_ = deg_2_rad(odom_rot_stddev_);
 
   // Standard deviation of the translation components of the landmark observations
   nh_.getParam("land_obs_trans_stddev", land_obs_trans_stddev_);
   // Standard deviation of the rotation components of the landmark observations
   nh_.getParam("land_obs_rot_stddev", land_obs_rot_stddev_);
+  land_obs_rot_stddev_ = deg_2_rad(land_obs_rot_stddev_);
 
   // The source frame for the tf transformLookup
   nh_.getParam("source_frame", source_frame_);
@@ -284,6 +287,18 @@ Eigen::Matrix4f Slam::pose_msg_2_transform(geometry_msgs::Pose pose_msg)
   transform.topRightCorner(3,1) = trans;
 
   return transform;
+}
+
+// Converts degrees to radians
+double Slam::deg_2_rad(double input)
+{
+  return input*M_PI/180.0;
+}
+
+// Converts radians to degrees
+double Slam::rad_2_deg(double input)
+{
+  return input*180.0/M_PI;
 }
 
 int main(int argc, char** argv)
