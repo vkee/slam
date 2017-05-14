@@ -97,8 +97,12 @@ class deltaOdomCalc():
 		if self.distanceTraveled >= self.distanceThreshold or self.yawAccumulated >= self.yawThreshold:
 			#publish the deltas:
 			deltas = Pose2D()
-			deltas.x = msg.pose.pose.position.x - self.pastPose[0]
-			deltas.y = msg.pose.pose.position.y - self.pastPose[1]
+			# deltas.x = msg.pose.pose.position.x - self.pastPose[0]
+			# deltas.y = msg.pose.pose.position.y - self.pastPose[1]
+			# Testing: ------
+			deltas.x = 0
+			deltas.y = 0
+			# Testing ------
 			deltas.theta = eulAng_orientation[2] - self.pastPose[2]
 			self.deltas_publisher.publish(deltas)
 			estimatedPose = Pose2D()
