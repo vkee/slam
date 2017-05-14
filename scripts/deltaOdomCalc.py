@@ -1,11 +1,5 @@
 #!/usr/bin/env python
-
 # Code for calculating delta(state) after moving.
-
-
-
-
-#!/usr/bin/env python
 # GOD! THESE IS DEF A MUST!
 from __future__ import division
 # ROS' heart:
@@ -31,21 +25,21 @@ import math
 from laser_geometry import *
 
 def convert_2_pose_stamped(data):
-        pose_stamped_msg = PoseStamped()
-        pose_stamped_msg.header.frame_id = 'map'
-        pose_msg = Pose()
-        pose_msg.position.x = data.x
-        pose_msg.position.y = data.y
-        pose_msg.position.z = 0.0
+    pose_stamped_msg = PoseStamped()
+    pose_stamped_msg.header.frame_id = 'map'
+    pose_msg = Pose()
+    pose_msg.position.x = data.x
+    pose_msg.position.y = data.y
+    pose_msg.position.z = 0.0
 
-        quat = tf.transformations.quaternion_from_euler(0.0, 0.0, data.theta)
-        pose_msg.orientation.x = quat[0]
-        pose_msg.orientation.y = quat[1]
-        pose_msg.orientation.z = quat[2]
-        pose_msg.orientation.w = quat[3]
+    quat = tf.transformations.quaternion_from_euler(0.0, 0.0, data.theta)
+    pose_msg.orientation.x = quat[0]
+    pose_msg.orientation.y = quat[1]
+    pose_msg.orientation.z = quat[2]
+    pose_msg.orientation.w = quat[3]
 
-        pose_stamped_msg.pose = pose_msg
-        return pose_stamped_msg
+    pose_stamped_msg.pose = pose_msg
+    return pose_stamped_msg
 
 
 def odom_callback(msg):
@@ -143,11 +137,13 @@ odom_sub = rospy.Subscriber('odom', Odometry, odom_callback)
 -------------------------------
 '''
 # ---- For publishing the delta state ---------
-deltas_publisher = rospy.Publisher('delta_state', Pose2D)
+delta_state = rospy.get_param('odom_meas_topic', False)
+deltas_publisher = rospy.Publisher(delta_state, Pose2D)
 # ---- For sanity check with rviz ---------
+
 poseEstimateDeltas_publisher = rospy.Publisher('delta_estimated_state', PoseStamped)
 
-
+print 'got here'
 
 
 

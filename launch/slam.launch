@@ -1,10 +1,14 @@
 <!-- Launch file for starting the hand labeling pipeline -->
 <launch>
-	<group ns="slam">
+	<!-- <group ns="slam"> -->
 		<!-- Load the parameters -->
 		<rosparam command="load" file="$(find slam)/params/slam_params.yaml"/>
 		<rosparam command="load" file="$(find slam)/params/ros_params.yaml"/>
 	 	
+	 	<!-- Odometry Measurement Node -->
+		<node name="pose2D_delta" pkg="slam" type="pose2D_delta.py" respawn="true" output="screen"/>
+
+	 	<!-- Main SLAM Node -->
 	 	<node name="slam_node" pkg="slam" type="slam" respawn="true" output="screen"/>
-	</group>
+	<!-- </group> -->
 </launch>
