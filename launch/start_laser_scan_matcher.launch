@@ -7,9 +7,7 @@ Example launch file: launches the scan matcher with pre-recorded data
   <rosparam command="load" file="$(find slam)/params/slam_params.yaml"/>
   <rosparam command="load" file="$(find slam)/params/ros_params.yaml"/>
 
-  <node name="pose2D_delta" pkg="slam" type="pose2D_delta.py" respawn="true" output="screen">
-    <param name="pose_correction" value="False"/>
-  </node>
+  <node name="pose2D_delta" pkg="slam" type="pose2D_delta.py" respawn="true" output="screen"/>
 
 
   <remap from="/vel" to="/cmd_vel"/>
@@ -37,6 +35,6 @@ Example launch file: launches the scan matcher with pre-recorded data
 
 
   <node pkg="rviz" type="rviz" name="rviz_mrorton"
-        args="-d $(find slam)/rvis/xwam.rviz"/>
+        args="-d $(find slam)/rviz/xwam.rviz"/>
 
 </launch>
