@@ -82,12 +82,12 @@ class SendPoseDelta():
             self.got_first_pose = True
 
         delta = Pose2D(x=data.x-self.prev_pose.x, y=data.y-self.prev_pose.y, theta=data.theta-self.prev_pose.theta)
-        # if one theta is negative and the other positive, we have to handle wraparound conditions
-        if (data.theta < 0) != (self.prev_pose.theta < 0) and delta.theta > 1:
+        # if one theta is negative and the other positive around theta = pi, we have to handle wraparound conditions
+        if (data.theta < 0) != (self.prev_pose.theta < 0) and abs(delta.theta) > 1:
 
             delta.theta = (abs(data.theta) - math.pi) + (abs(self.prev_pose.theta) - math.pi)
-            if data.theta > 0:
-                # we went from negative to positive which should be a negative angular velocity
+            if data.theta < 0:
+                # we went from positive to negative which should be a positive angular velocity
                 delta.theta = -1* delta.theta
 
 
