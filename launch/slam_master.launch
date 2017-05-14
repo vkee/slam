@@ -1,0 +1,11 @@
+<!--
+Launches all necessary nodes for slam implementation
+-->
+<launch>
+  <!--Launch april tags-->
+  <include file="$(find apriltags_ros)/launch/run_apriltag_detection.launch"/>
+  <!--Launch octomap-->
+  <include file="$(find octomap_server)/launch/antonio_octomap.launch"/>
+  <!--Launch slam-->
+  <include file="$(find slam)/launch/slam.launch"/>
+</launch>

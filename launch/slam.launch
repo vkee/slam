@@ -40,6 +40,6 @@
 	 	<!-- Main SLAM Node -->
 	 	<node name="slam_node" pkg="slam" type="slam" respawn="true" output="screen"/>
 
-	 	<node pkg="rviz" type="rviz" name="rviz_mrorton" args="-d $(find slam)/rviz/xwam.rviz"/>
+	 	<node pkg="rviz" type="rviz" name="rviz_mrorton" args="-d $(find slam)/rviz/odomSLAM.rviz"/>
 	<!-- </group> -->
 </launch>
