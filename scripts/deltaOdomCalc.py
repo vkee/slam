@@ -100,8 +100,8 @@ class deltaOdomCalc():
 		if self.distanceTraveled >= self.distanceThreshold or self.yawAccumulated >= self.yawThreshold:
 			#publish the deltas:
 			deltas = Pose2D()
-			deltas.x = abs(msg.pose.pose.position.x - self.pastPose[0])
-			deltas.y = abs(msg.pose.pose.position.y - self.pastPose[1])
+			deltas.x = msg.pose.pose.position.x - self.pastPose[0]
+			deltas.y = msg.pose.pose.position.y - self.pastPose[1]
 			# store in array:
 			self.deltaHistory.append(deltas)
 			# Testing: ------
