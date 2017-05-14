@@ -126,6 +126,7 @@ class SendPoseDelta():
 
         self.estimated_pose = Pose2D(x=self.estimated_pose.x+delta.x, y=self.estimated_pose.y+delta.y, 
                                         theta=self.estimated_pose.theta+delta.theta)
+        print 'Python Estimated Pose', self.estimated_pose
         self.convert_and_publish()
 
         self.pose_delta_pub.publish(delta)

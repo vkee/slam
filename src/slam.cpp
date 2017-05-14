@@ -154,10 +154,10 @@ void Slam::init_localization()
 // Callback for receiving the odometry msg
 void Slam::odom_meas_cb(const geometry_msgs::Pose2DConstPtr& msg)
 {
-  std::cout << "Here" << std::endl;
   // NOTE: if too slow, to do this whole optimize, could probably just concatenate the odom on top of the est state to get new est robot pose state
 
   geometry_msgs::Pose2D odom_meas_msg = *msg;
+  std::cout << "odom_meas_msg: " << odom_meas_msg << std::endl;
   // Adding the odometry measurement to the factor graph and optimizing the graph
   slam::Localization::Pose2D est_robot_pose = localization_.add_odom_measurement(odom_meas_msg.x, odom_meas_msg.y, odom_meas_msg.theta);
 
