@@ -37,6 +37,6 @@ Example launch file: launches the scan matcher with pre-recorded data
 
 
   <node pkg="rviz" type="rviz" name="rviz_mrorton"
-        args="-d $(find slam)/rvis/xwam.rviz"/>
+        args="-d $(find slam)/rviz/xwam.rviz"/>
 
 </launch>
