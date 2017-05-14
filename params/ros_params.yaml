@@ -23,6 +23,19 @@ landmark_meas_queue_size: 10
 est_robot_pose_topic: est_robot_pose
 est_robot_queue_size: 1
 
+
+# Laser Odometry Topics
+
+# Boolean for whether to try to overwrite laser_scan_matcher pose estimates
+use_pose_correction: false
+# If we will be overwriting pose estimates, these parameters scale the
+# pose deltas obtained from the commanded velocity
+linear_scaling_correction: 1.0
+angular_scaling_correction: 1.0
+# pose estimate corrections should only be made if our calculated
+# pose delta is above a noise threshold
+noise_threshold_correction: 0.01
+
 # Topic for Odometry Measurements (from preprocessing node)
 odom_meas_topic: odom_meas_topic
 # Queue size for Odometry Measurements
