@@ -52,6 +52,9 @@ class deltaOdomCalc():
 		self.deltas_publisher = rospy.Publisher(delta_state, Pose2D)
 		# ---- For sanity check with rviz ---------
 		self.poseEstimateDeltas_publisher = rospy.Publisher('delta_estimated_state', PoseStamped)
+		# testing array
+		self.deltaHistory = []
+		self.initialPose = [0,0,0]
 		# loop
 		rospy.spin()
 
@@ -97,18 +100,24 @@ class deltaOdomCalc():
 		if self.distanceTraveled >= self.distanceThreshold or self.yawAccumulated >= self.yawThreshold:
 			#publish the deltas:
 			deltas = Pose2D()
-			# deltas.x = msg.pose.pose.position.x - self.pastPose[0]
-			# deltas.y = msg.pose.pose.position.y - self.pastPose[1]
+			deltas.x = abs(msg.pose.pose.position.x - self.pastPose[0])
+			deltas.y = abs(msg.pose.pose.position.y - self.pastPose[1])
+			# store in array:
+			self.deltaHistory.append(deltas)
 			# Testing: ------
-			deltas.x = 0
-			deltas.y = 0
+			# deltas.x = 
+			# deltas.y = 
 			# Testing ------
 			deltas.theta = eulAng_orientation[2] - self.pastPose[2]
 			self.deltas_publisher.publish(deltas)
 			estimatedPose = Pose2D()
-			estimatedPose.x = self.pastPose[0] + deltas.x
-			estimatedPose.y = self.pastPose[1] + deltas.y
-			estimatedPose.theta = self.pastPose[2] + deltas.theta
+			for e in self.deltaHistory:
+				estimatedPose.x += e.x
+				estimatedPose.y += e.y
+				estimatedPose.theta += e.theta
+			# estimatedPose.x = self.pastPose[0] + deltas.x
+			# estimatedPose.y = self.pastPose[1] + deltas.y
+			# estimatedPose.theta = self.pastPose[2] + deltas.theta
 			convertedEstimatedPose = self.convert_2_pose_stamped(estimatedPose)
 			# print convertedEstimatedPose
 			self.poseEstimateDeltas_publisher.publish(convertedEstimatedPose)
