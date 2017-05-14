@@ -24,144 +24,104 @@ import math
 # from laser_geometry class:
 from laser_geometry import *
 
-def convert_2_pose_stamped(data):
-    pose_stamped_msg = PoseStamped()
-    pose_stamped_msg.header.frame_id = 'map'
-    pose_msg = Pose()
-    pose_msg.position.x = data.x
-    pose_msg.position.y = data.y
-    pose_msg.position.z = 0.0
-
-    quat = tf.transformations.quaternion_from_euler(0.0, 0.0, data.theta)
-    pose_msg.orientation.x = quat[0]
-    pose_msg.orientation.y = quat[1]
-    pose_msg.orientation.z = quat[2]
-    pose_msg.orientation.w = quat[3]
-
-    pose_stamped_msg.pose = pose_msg
-    return pose_stamped_msg
 
 
-def odom_callback(msg):
-	'''
-	Input:
-		msg - nav_msgs/Odometry
-	Returns:
-		???
-	'''
-	global posesInitialized, pastPose, currPose, distanceTraveled, yawAccumulated, deltas_publisher,poseEstimateDeltas_publisher
-	if not(posesInitialized):
+class deltaOdomCalc():
+	def __init__(self):
+		# initialize the node:
+		rospy.init_node("delta_odom_calc", anonymous=True)
+		# import parameters
+		self.pastPose = None
+		self.currPose = None
+		self.estimatedPose = None
+		# create trigger variables
+		self.distanceTraveled = 0
+		self.yawAccumulated = 0
+		# poses initialized flag:
+		self.posesInitialized = False
+		# comparison values:
+		self.distanceThreshold = rospy.get_param('robot_odom_distance_threshold') # meters
+		angleThreshold = rospy.get_param('robot_odom_yaw_threshold')
+		self.yawThreshold = (angleThreshold)*(math.pi/180) # radians
+		# initialize subscribers
+		# Suscribe to the laser scan topic
+		self.odom_sub = rospy.Subscriber('odom', Odometry, self.odom_callback)
+		# initialize publishers
+		# ---- For publishing the delta state ---------
+		delta_state = rospy.get_param('odom_meas_topic', False)
+		self.deltas_publisher = rospy.Publisher(delta_state, Pose2D)
+		# ---- For sanity check with rviz ---------
+		self.poseEstimateDeltas_publisher = rospy.Publisher('delta_estimated_state', PoseStamped)
+		# loop
+		rospy.spin()
+
+
+	def convert_2_pose_stamped(self, data):
+	    pose_stamped_msg = PoseStamped()
+	    pose_stamped_msg.header.frame_id = 'map'
+	    pose_msg = Pose()
+	    pose_msg.position.x = data.x
+	    pose_msg.position.y = data.y
+	    pose_msg.position.z = 0.0
+
+	    quat = tf.transformations.quaternion_from_euler(0.0, 0.0, data.theta)
+	    pose_msg.orientation.x = quat[0]
+	    pose_msg.orientation.y = quat[1]
+	    pose_msg.orientation.z = quat[2]
+	    pose_msg.orientation.w = quat[3]
+
+	    pose_stamped_msg.pose = pose_msg
+	    return pose_stamped_msg
+
+
+	def odom_callback(self, msg):
+		'''
+		Input:
+			msg - nav_msgs/Odometry
+		Returns:
+			???
+		'''
+		if not(self.posesInitialized):
+			quaternion = (msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)
+			eulAng_orientation = tf.transformations.euler_from_quaternion(quaternion)
+			self.pastPose = [msg.pose.pose.position.x, msg.pose.pose.position.y, eulAng_orientation[2]]
+			self.currPose = [msg.pose.pose.position.x, msg.pose.pose.position.y, eulAng_orientation[2]]
+			self.posesInitialized = True
+			return None
+		# accumulate distance and yaw:
+		self.distanceTraveled += math.sqrt( (msg.pose.pose.position.x - self.currPose[0])**2 + (msg.pose.pose.position.y - self.currPose[1])**2 )
 		quaternion = (msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)
 		eulAng_orientation = tf.transformations.euler_from_quaternion(quaternion)
-		pastPose = [msg.pose.pose.position.x, msg.pose.pose.position.y, eulAng_orientation[2]]
-		currPose = [msg.pose.pose.position.x, msg.pose.pose.position.y, eulAng_orientation[2]]
-		posesInitialized = True
+		self.yawAccumulated +=  abs(eulAng_orientation[2] - self.currPose[2])
+		# check flags:
+		if self.distanceTraveled >= self.distanceThreshold or self.yawAccumulated >= self.yawThreshold:
+			#publish the deltas:
+			deltas = Pose2D()
+			deltas.x = msg.pose.pose.position.x - self.pastPose[0]
+			deltas.y = msg.pose.pose.position.y - self.pastPose[1]
+			deltas.theta = eulAng_orientation[2] - self.pastPose[2]
+			self.deltas_publisher.publish(deltas)
+			estimatedPose = Pose2D()
+			estimatedPose.x = self.pastPose[0] + deltas.x
+			estimatedPose.y = self.pastPose[1] + deltas.y
+			estimatedPose.theta = self.pastPose[2] + deltas.theta
+			convertedEstimatedPose = self.convert_2_pose_stamped(estimatedPose)
+			# print convertedEstimatedPose
+			self.poseEstimateDeltas_publisher.publish(convertedEstimatedPose)
+			# update the old pose
+			self.pastPose = [msg.pose.pose.position.x, msg.pose.pose.position.y, eulAng_orientation[2]]
+			# reset threshold:
+			self.distanceTraveled = 0
+			self.yawAccumulated = 0
+		quaternion = (msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)
+		eulAng_orientation = tf.transformations.euler_from_quaternion(quaternion)
+		self.currPose = [msg.pose.pose.position.x, msg.pose.pose.position.y, eulAng_orientation[2]]
 		return None
-	# accumulate distance and yaw:
-	distanceTraveled += math.sqrt( (msg.pose.pose.position.x - currPose[0])**2 + (msg.pose.pose.position.y - currPose[1])**2 )
-	quaternion = (msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)
-	eulAng_orientation = tf.transformations.euler_from_quaternion(quaternion)
-	yawAccumulated +=  abs(eulAng_orientation[2] - currPose[2])
-	# check flags:
-	if distanceTraveled >= distanceThreshold or yawAccumulated >= yawThreshold:
-		#publish the deltas:
-		deltas = Pose2D()
-		deltas.x = msg.pose.pose.position.x - pastPose[0]
-		deltas.y = msg.pose.pose.position.y - pastPose[1]
-		deltas.theta = eulAng_orientation[2] - pastPose[2]
-		deltas_publisher.publish(deltas)
-		estimatedPose = Pose2D()
-		estimatedPose.x = pastPose[0] + deltas.x
-		estimatedPose.y = pastPose[1] + deltas.y
-		estimatedPose.theta = pastPose[2] + deltas.theta
-		convertedEstimatedPose = convert_2_pose_stamped(estimatedPose)
-		# print convertedEstimatedPose
-		poseEstimateDeltas_publisher.publish(convertedEstimatedPose)
-		# update the old pose
-		pastPose = [msg.pose.pose.position.x, msg.pose.pose.position.y, eulAng_orientation[2]]
-		# reset threshold:
-		distanceTraveled = 0
-		yawAccumulated = 0
-	quaternion = (msg.pose.pose.orientation.x,msg.pose.pose.orientation.y,msg.pose.pose.orientation.z,msg.pose.pose.orientation.w)
-	eulAng_orientation = tf.transformations.euler_from_quaternion(quaternion)
-	currPose = [msg.pose.pose.position.x, msg.pose.pose.position.y, eulAng_orientation[2]]
-	return None
 
 
+if __name__=="__main__":
+    node = deltaOdomCalc()
 
-
-
-
-
-
-	
-
-'''
-==========================================
-======              MAIN             =====
-==========================================
-'''
-# Initialize our node with the name:
-rospy.init_node('deltaOdomCalc')
-# create variables:
-pastPose = None
-currPose = None
-estimatedPose = None
-# create global variable with time 
-now = rospy.get_rostime()
-rospy.loginfo("Current time %i %i", now.secs, now.nsecs)
-currentTime = now.secs + now.nsecs*1e-9
-# create trigger variables
-distanceTraveled = 0
-yawAccumulated = 0
-# poses initialized flag:
-posesInitialized = False
-# comparison values:
-distanceThreshold = 0.2 # meters
-yawThreshold = 5*(math.pi/180) # radians
-
-
-
-'''
--------------------------------
----    Topic Subscribers!   ---
--------------------------------
-'''
-# Suscribe to the laser scan topic
-odom_sub = rospy.Subscriber('odom', Odometry, odom_callback)
-
-
-'''
--------------------------------
----    Topic Publishers!    ---
--------------------------------
-'''
-# ---- For publishing the delta state ---------
-delta_state = rospy.get_param('odom_meas_topic', False)
-deltas_publisher = rospy.Publisher(delta_state, Pose2D)
-# ---- For sanity check with rviz ---------
-
-poseEstimateDeltas_publisher = rospy.Publisher('delta_estimated_state', PoseStamped)
-
-print 'got here'
-
-
-
-
-
-'''
--------------------------------
----       Infinite Loop     ---
--------------------------------
-'''
-rospy.spin()
-# while not rospy.is_shutdown():
-
-
-# 	# deltaPose = pastPose - currPose
-
-
-# 	rospy.sleep(1)
 
 
 
