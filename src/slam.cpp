@@ -8,21 +8,24 @@ Slam::Slam()
   // Setup the subscribers and publishers
   setup_subs_pubs_srvs();
 
-  // Lookup camera transform
-  bool success = lookup_camera_transform();
+  // // Lookup camera transform
+  // bool success = lookup_camera_transform();
 
-  if (success)
-  {
-    // Initialize the GTSAM library
-    init_localization();
+  // if (success)
+  // {
+  //   // Initialize the GTSAM library
+  //   init_localization();
 
-    ROS_INFO("Slam Node Initialized");
-  }
+  //   ROS_INFO("Slam Node Initialized");
+  // }
 
-  else
-  {
-    ROS_ERROR("Unable to find camera transform to base link, Slam node NOT initialized");
-  }
+  // else
+  // {
+  //   ROS_ERROR("Unable to find camera transform to base link, Slam node NOT initialized");
+  // }
+
+  init_localization();
+  ROS_INFO("Slam Node Initialized");
 }
 
 Slam::~Slam()
@@ -148,6 +151,7 @@ void Slam::init_localization()
 // Callback for receiving the odometry msg
 void Slam::odom_meas_cb(const geometry_msgs::Pose2DConstPtr& msg)
 {
+  std::cout << "Here" << std::endl;
   // NOTE: if too slow, to do this whole optimize, could probably just concatenate the odom on top of the est state to get new est robot pose state
 
   geometry_msgs::Pose2D odom_meas_msg = *msg;
