@@ -30,12 +30,48 @@ resetter = rospy.ServiceProxy('/octomap_server/reset', Empty)
 
 
 
+# Guide to running from a ROS Bag
+run roscore
+	-- ```roscore```
+
+//run rviz
+//	-- ```rviz```
+//	-- open xwam.config in slam/rviz/xwam.config
+
+run apriltags
+	-- Make sure to copy run_apriltags_detection.launch from the slam/launch folder into the apriltags_ros/apriltags_ros/launch folder
+	-- in slam folder ```roslaunch apriltags_ros run_apriltag_detection.launch```
+
+run octomap
+	-- Make sure to copy antonio_octomap.launch according to README in the slam repo
+	-- in slam folder ```roslaunch octomap_server antonio_octomap.launch```
+
+roslaunch slam
+	-- ```roslaunch slam slam.launch```
+
+run the bag
+	-- ```rosparam set use_sim_time true```
+	-- ```rosbag play --clock <bag_file>```
 
 
+## Some other notes
 
-## Implemenatation Info:
-- Using apriltags_ros for range and bearing measurements. Need to get apriltags_ros package, and launch node with launch/run_apriltag_detection.launch launch file:
-
-```shell
-roslaunch apriltags_ros run_apriltag_detection.launch
+Useful commands
 ```
+export ROS_MASTER_URI=http://192.168.2.100:11311
+export ROS_IP=<local-ip, from ifconfig>
+source ~/catkin_ws/devel/setup.bash
+env | grep ROS
+
+rosrun 
+rqt_graph
+rviz
+rosrun rf view_frames
+```
+
+Installing gtsam on Ubuntu 16.04:
+In file: /home/student/Downloads/gtsam-3.2.1/gtsam/base/FastSet.h
+add the line `#include <boost/serialization/serialization.hpp>`
+before the line `#include <boost/serialization/set.hpp>`
+
+based on https://svn.boost.org/trac/boost/ticket/12126
