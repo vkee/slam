@@ -109,8 +109,6 @@ class deltaOdomCalc():
 			# deltas.y = 
 			# Testing ------
 			deltas.theta = eulAng_orientation[2] - self.pastPose[2]
-			deltas.x = deltas.x/math.cos(deltas.theta)
-			deltas.y = deltas.y/math.sin(deltas.theta)
 			self.deltas_publisher.publish(deltas)
 			estimatedPose = Pose2D()
 			for e in self.deltaHistory:
