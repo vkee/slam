@@ -37,3 +37,8 @@ odom_meas_queue_size: 1
 robot_odom_distance_threshold: 0.2 
 # angle difference trigger between poses to get a delta calculation [deg]
 robot_odom_yaw_threshold: 5
+
+
+# Converted LaserScan topic into PointCloud2 for the octomap server (runLaserGeomtery.py):
+laserscan_to_pointcloud_topic: cloud_in
+laserscan_topic: scan

@@ -31,13 +31,15 @@ from laser_geometry import *
 
 class LaserGeometryProjector():
 	def __init__(self):
-		rospy.init_node('laserToPointCloud2Converter', anonymous=True)
+		laserScanTopic = rospy.get_param('laserscan_topic', False)
+		rospy.init_node(laserScanTopic, anonymous=True)
 		# create our converter object:
 		self.wallE = LaserProjection()
 		# subscribers:
 		self.laserScan_sub = rospy.Subscriber('scan', LaserScan, self.laserScan_callback)
 		# publishers:
-		self.pointCloud2_publisher = rospy.Publisher('cloud_in', PointCloud2)
+		pointCloudTopic = rospy.get_param('laserscan_to_pointcloud_topic', False)
+		self.pointCloud2_publisher = rospy.Publisher(pointCloudTopic, PointCloud2)
 		rospy.spin()
 
 
