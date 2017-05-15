@@ -46,3 +46,6 @@ robot_odom_yaw_threshold: 5
 # Converted LaserScan topic into PointCloud2 for the octomap server (runLaserGeomtery.py):
 laserscan_to_pointcloud_topic: cloud_in
 laserscan_topic: scan
+
+# Extra topic to publish deltas as PoseStamed
+delta_odom_posestamped: delta_odom_posestamped
