@@ -16,10 +16,8 @@ class SendPoseDelta():
 
         self.frame_id = rospy.get_param("frame_id", "map")
 
-        pose_delta_topic = rospy.get_param("odom_meas_topic", "odom_meas_topic")
-        pose_delta_queue_size = rospy.get_param("odom_meas_queue_size", 1)
-
         self.estimated_pose = Pose2D()  # Will allow us to compare how scrapping the values is helping us
+        self.pose_delta     = Pose2D()
         self.got_first_pose = False
 
         self.prev_vel = Twist()
@@ -31,33 +29,50 @@ class SendPoseDelta():
         self.pose2D_sub = rospy.Subscriber("/pose2D", Pose2D, self.get_pose_delta, queue_size=1)
         self.cmd_vel_sub = rospy.Subscriber("/cmd_vel", Twist, self.update_velocity, queue_size=1)
 
+        pose_delta_topic = rospy.get_param("odom_meas_topic", "odom_meas_topic")
+        pose_delta_queue_size = rospy.get_param("odom_meas_queue_size", 1)
         self.pose_delta_pub = rospy.Publisher(pose_delta_topic, Pose2D, queue_size=pose_delta_queue_size)
 
         odom_meas_global_topic = rospy.get_param('odom_meas_global_topic', False)
         odom_meas_global_queue_size = rospy.get_param('odom_meas_global_queue_size', 1)
         self.pose_stamped_pub = rospy.Publisher(odom_meas_global_topic, PoseStamped, queue_size=odom_meas_global_queue_size)
 
+        delta_odom_posestamped = rospy.get_param('delta_odom_posestamped', False)
+        delta_odom_posestamped_queue_size = rospy.get_param('delta_odom_posestamped_queue_size', 1)
+        self.delta_pose_stamped_pub = rospy.Publisher(delta_odom_posestamped, PoseStamped, queue_size=delta_odom_posestamped_queue_size)
+
         rospy.spin()
 
-    def convert_and_publish(self):
+    def convert_and_publish(self, is_delta=False):
         """
         Converts the estimated Pose2D to a PoseStamped and publishes it for rviz viewing
         """
+        pose = Pose2D()
+        if is_delta:
+            pose = self.pose_delta
+        else:
+            pose = self.estimated_pose
+
         pose_stamped_msg = PoseStamped()
         pose_stamped_msg.header.frame_id = self.frame_id
         pose_msg = Pose()
-        pose_msg.position.x = self.estimated_pose.x
-        pose_msg.position.y = self.estimated_pose.y
+        pose_msg.position.x = pose.x
+        pose_msg.position.y = pose.y
         pose_msg.position.z = 0.0
 
-        quat = tf.transformations.quaternion_from_euler(0.0, 0.0, self.estimated_pose.theta)
+        quat = tf.transformations.quaternion_from_euler(0.0, 0.0, pose.theta)
         pose_msg.orientation.x = quat[0]
         pose_msg.orientation.y = quat[1]
         pose_msg.orientation.z = quat[2]
         pose_msg.orientation.w = quat[3]
 
         pose_stamped_msg.pose = pose_msg
-        self.pose_stamped_pub.publish(pose_stamped_msg)
+
+        if is_delta:
+            self.delta_pose_stamped_pub.publish(pose_stamped_msg)
+        else:
+            self.pose_stamped_pub.publish(pose_stamped_msg)
+
 
     def update_velocity(self, data):
         vel_at = rospy.get_time()
@@ -125,7 +140,11 @@ class SendPoseDelta():
 
         self.estimated_pose = Pose2D(x=self.estimated_pose.x+delta.x, y=self.estimated_pose.y+delta.y, 
                                         theta=self.estimated_pose.theta+delta.theta)
+        self.pose_delta = delta
+
         self.convert_and_publish()
+        self.convert_and_publish(True)
+
         self.pose_delta_pub.publish(delta)
 
 

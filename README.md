@@ -1,42 +1,51 @@
-# slam
+# slam MASTER README
 SLAM Implementation for 6.834 Grand Challenge 2017
 
-## Occupancy grid:
+Read this README before reading the README in the `slam_backend` repo. 
 
-We're using octomap_server to read from a cloud_in PointCloud2, which comes from the laserToPointCloud2Converter node (runLaserGeometry.py python file). To run the octomap server, you execute
+# Setup
+
+This project has the following external dependencies:
+	- AprilTags
+	- Octomaps
+	- GTSAM/iSAM2
+
+Installing AprilTags
+	- Clone from https://github.com/RIVeR-Lab/apriltags_ros into catkin_ws/src/
+	- cd into catkin_ws
+	- catkin_make
+
+Installing Octomap
+	- sudo apt-get install ros-kinetic-octomap-server
+	- (may need to install ros-kinetic-octomap and ros-kinetic-octomap-mapping and ros-kinetic-octomap-msgs)
+
+Installing GTSAM/iSAM2
+	- see slam_backend README
+
+Setting up launch files
+	- copy slam/launch/antonio_octomap.launch into `/opt/ros/indigo/share/octomap_server/launch` (you can get here with `roscd octomap_server`)
+	- copy slam/launch/run_apriltags_detection.launch into `apriltags_ros/apriltags_ros/launch` (most likely in catkin_ws/src)
+
+NOTE: Before launching SLAM, reset odom transform to the current robot location (Eric can do this). Make sure the robot is not moving
+
+Launching everything
+	- roslaunch slam slam_master.launch
+
+RViz Setup
+	- Open the config from `slam/rviz/odomSLAM.rviz`
+
+# Debugging
+Make sure your environment variables are set correctly:
 
 ```shell
-roslaunch octomap_server antonio_octomap.launch
+export ROS_MASTER_URI=http://192.168.2.100:11311
+export ROS_IP=<local-ip, from ifconfig>
+source ~/catkin_ws/devel/setup.bash
 ```
-
-******* the file antonio_octomap.launch needs to be moved to the directory:
-/opt/ros/indigo/share/octomap_server/launch (you can get here with `roscd octomap_server`)
-
-### laserScan to pointCloud2:
-
-Handled by the python script runLaserGeometry.py
-
-### Resetting the map
-
-To do that, import the Empty service and create an object with:
-```python
-from std_srvs.srv import Empty
-resetter = rospy.ServiceProxy('/octomap_server/reset', Empty)
-```
-
-### TODOs:
-- Need to change "frame_id" from odom (current) to the origin of our SLAM implementation (e.g., slam_map).
-
-
-
 
 # Guide to running from a ROS Bag
 run roscore
 	-- ```roscore```
-
-//run rviz
-//	-- ```rviz```
-//	-- open xwam.config in slam/rviz/xwam.config
 
 run apriltags
 	-- Make sure to copy run_apriltags_detection.launch from the slam/launch folder into the apriltags_ros/apriltags_ros/launch folder
@@ -69,9 +78,26 @@ rviz
 rosrun rf view_frames
 ```
 
-Installing gtsam on Ubuntu 16.04:
-In file: /home/student/Downloads/gtsam-3.2.1/gtsam/base/FastSet.h
-add the line `#include <boost/serialization/serialization.hpp>`
-before the line `#include <boost/serialization/set.hpp>`
+# Outdated Notes:
+## Occupancy grid:
 
-based on https://svn.boost.org/trac/boost/ticket/12126
+We're using octomap_server to read from a cloud_in PointCloud2, which comes from the laserToPointCloud2Converter node (runLaserGeometry.py python file). To run the octomap server, you execute
+
+```shell
+roslaunch octomap_server antonio_octomap.launch
+```
+
+******* the file antonio_octomap.launch needs to be moved to the directory:
+/opt/ros/indigo/share/octomap_server/launch (you can get here with `roscd octomap_server`)
+
+### laserScan to pointCloud2:
+
+Handled by the python script runLaserGeometry.py
+
+### Resetting the map
+
+To do that, import the Empty service and create an object with:
+```python
+from std_srvs.srv import Empty
+resetter = rospy.ServiceProxy('/octomap_server/reset', Empty)
+```

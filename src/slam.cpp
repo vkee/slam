@@ -89,12 +89,12 @@ void Slam::setup_subs_pubs_srvs()
   // }
 
   // Subscriber for odometry measurements (using the estimated global poses)
-  std::string odom_meas_global_topic;
-  int odom_meas_global_queue_size;
-  if (nh_.getParam("odom_meas_global_topic", odom_meas_global_topic) && nh_.getParam("odom_meas_global_queue_size", odom_meas_global_queue_size))
+  std::string delta_odom_posestamped;
+  int delta_odom_posestamped_queue_size;
+  if (nh_.getParam("delta_odom_posestamped", delta_odom_posestamped) && nh_.getParam("delta_odom_posestamped_queue_size", delta_odom_posestamped_queue_size))
   {
-    odom_meas_global_sub_ = nh_.subscribe(odom_meas_global_topic, odom_meas_global_queue_size, &Slam::robot_pose_est_cb, this);
-    ROS_DEBUG("Global Odometry Measurement Topic %s Subscriber Loaded", odom_meas_global_topic.c_str());
+    odom_meas_global_sub_ = nh_.subscribe(delta_odom_posestamped, delta_odom_posestamped_queue_size, &Slam::robot_pose_est_cb, this);
+    ROS_DEBUG("Global Odometry Measurement Topic %s Subscriber Loaded", delta_odom_posestamped.c_str());
   }
   else
   {
@@ -170,28 +170,44 @@ void Slam::init_localization()
 // Callback for receiving the current estimated robot pose and adding the odometry measurement 
 void Slam::robot_pose_est_cb(const geometry_msgs::PoseStampedConstPtr& msg)
 {
-  // TODO: WAIT FOR MATT AND ANTONIO TO UPDDATE to publish deltas
-
-
-  geometry_msgs::PoseStamped est_robot_pose_msg = *msg;
+  geometry_msgs::PoseStamped est_robot_delta_msg = *msg;
 
   // Getting the latest pose estimate
-  Eigen::Matrix4f new_est_robot_pose_ = pose_msg_2_transform(est_robot_pose_msg.pose);
-
-  // Getting the odometry measurement
-  Eigen::Matrix4f odom_meas_ = est_robot_pose_.inverse() * new_est_robot_pose_;
-  slam::Localization::Pose2D odom_meas_pose2d = transform_2_pose2d(est_robot_pose_);
+  Eigen::Matrix4f delta_robot_pose = pose_msg_2_transform(est_robot_delta_msg.pose);
+  slam::Localization::Pose2D delta_robot_pose_2d = transform_2_pose2d(delta_robot_pose);
 
   // Updating the current estimated robot pose
-  est_robot_pose_ = new_est_robot_pose_;
+  est_robot_pose_ = est_robot_pose_ * delta_robot_pose;
   slam::Localization::Pose2D est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
 
   // Adding the odometry measurement to the factor graph
-  localization_.add_odom_measurement(odom_meas_pose2d.x, odom_meas_pose2d.y, odom_meas_pose2d.theta,
+  localization_.add_odom_measurement(delta_robot_pose_2d.x, delta_robot_pose_2d.y, delta_robot_pose_2d.theta,
     est_robot_pose2d.x, est_robot_pose2d.y, est_robot_pose2d.theta);
 
   // Publish pose estimate
   est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose2d));
+
+
+  // Working with Global
+  // geometry_msgs::PoseStamped est_robot_pose_msg = *msg;
+
+  // // Getting the latest pose estimate
+  // Eigen::Matrix4f new_est_robot_pose_ = pose_msg_2_transform(est_robot_pose_msg.pose);
+
+  // // Getting the odometry measurement
+  // Eigen::Matrix4f odom_meas_ = est_robot_pose_.inverse() * new_est_robot_pose_;
+  // slam::Localization::Pose2D odom_meas_pose2d = transform_2_pose2d(est_robot_pose_);
+
+  // // Updating the current estimated robot pose
+  // est_robot_pose_ = new_est_robot_pose_;
+  // slam::Localization::Pose2D est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
+
+  // // Adding the odometry measurement to the factor graph
+  // localization_.add_odom_measurement(odom_meas_pose2d.x, odom_meas_pose2d.y, odom_meas_pose2d.theta,
+  //   est_robot_pose2d.x, est_robot_pose2d.y, est_robot_pose2d.theta);
+
+  // // Publish pose estimate
+  // est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose2d));
 }
 
 // Callback for receiving the odometry msg
