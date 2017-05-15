@@ -171,7 +171,6 @@ void Slam::init_localization()
 void Slam::robot_pose_est_cb(const geometry_msgs::PoseStampedConstPtr& msg)
 {
   geometry_msgs::PoseStamped est_robot_pose_msg = *msg;
-  std::cout << "est_robot_pose_msg: " << est_robot_pose_msg << std::endl;
 
   // Getting the latest pose estimate
   Eigen::Matrix4f new_est_robot_pose_ = pose_msg_2_transform(est_robot_pose_msg.pose);
@@ -210,6 +209,8 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
   apriltags_ros::AprilTagDetectionArray detections_array_msg = *msg;
   std::vector<apriltags_ros::AprilTagDetection> detections = detections_array_msg.detections;
 
+  std::cout << "detections.size(): " << detections.size() << std::endl;
+
   // TODO: may need to get the most up to date robot pose so that landmark measurements are from a robot pose node where the robot is at at the time of the landmark measurement
   // apparently we are getting odometry measurements at 10 hz so that is probably fine?
   for (int i = 0; i < detections.size(); i++)
@@ -217,6 +218,7 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
     apriltags_ros::AprilTagDetection indiv_detection = detections[i];
 
     int landmark_id = indiv_detection.id;
+    std::cout << "landmark_id: " << landmark_id << std::endl;
     geometry_msgs::PoseStamped pose = indiv_detection.pose;
 
     // Computing the transform from the robot base_link to the landmark

@@ -32,6 +32,7 @@ odom_meas_topic: odom_meas_topic
 # Queue size for Odometry Measurements
 odom_meas_queue_size: 1
 
+# Topic for Global Odometry Measurements
 odom_meas_global_topic: odom_meas_global_topic
 # Queue size for Global Odometry Measurements
 odom_meas_global_queue_size: 1
