@@ -28,11 +28,11 @@ fixed_frame: odom
 base_frame: base_link
 
 # Topic for Odometry Measurements (from preprocessing node)
-odom_meas_topic: odom_meas_topic
+odom_meas_topic: odom_meas_topic  # will be a delta of Pose2D messages
 # Queue size for Odometry Measurements
 odom_meas_queue_size: 1
 
-odom_meas_global_topic: odom_meas_global_topic
+odom_meas_global_topic: odom_meas_global_topic  # will be an abolute measurement of PoseStamped messages
 # Queue size for Global Odometry Measurements
 odom_meas_global_queue_size: 1
 
@@ -47,5 +47,7 @@ robot_odom_yaw_threshold: 5
 laserscan_to_pointcloud_topic: cloud_in
 laserscan_topic: scan
 
-# Extra topic to publish deltas as PoseStamed
+# Extra topic to publish pose deltas as PoseStamed messages
 delta_odom_posestamped: delta_odom_posestamped
+# Queue size for Extra topic
+delta_odom_posestamped_queue_size: 1
