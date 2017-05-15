@@ -2,7 +2,7 @@
 slam_ros_loop_rate: 100
 
 # Frame ID 
-frame_id: map
+frame_id: odom
 
 # TF frames for getting the transform from base link to camera
 target_frame: base_link
@@ -24,7 +24,7 @@ est_robot_pose_topic: est_robot_pose
 est_robot_queue_size: 1
 
 # Laser Scan Matcher TF Frames
-fixed_frame: map
+fixed_frame: odom
 base_frame: base_link
 
 # Topic for Odometry Measurements (from preprocessing node)
