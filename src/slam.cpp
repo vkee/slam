@@ -170,6 +170,9 @@ void Slam::init_localization()
 // Callback for receiving the current estimated robot pose and adding the odometry measurement 
 void Slam::robot_pose_est_cb(const geometry_msgs::PoseStampedConstPtr& msg)
 {
+  // TODO: WAIT FOR MATT AND ANTONIO TO UPDDATE to publish deltas
+
+
   geometry_msgs::PoseStamped est_robot_pose_msg = *msg;
 
   // Getting the latest pose estimate
@@ -211,8 +214,8 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
   std::cout << "detections.size(): " << detections.size() << std::endl;
 
-  // TODO: may need to get the most up to date robot pose so that landmark measurements are from a robot pose node where the robot is at at the time of the landmark measurement
-  // apparently we are getting odometry measurements at 10 hz so that is probably fine?
+  bool can_optimize_graph = false;
+
   for (int i = 0; i < detections.size(); i++)
   {
     apriltags_ros::AprilTagDetection indiv_detection = detections[i];
@@ -224,24 +227,40 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
     // Computing the transform from the robot base_link to the landmark
     Eigen::Matrix4f cam_T_landmark = pose_msg_2_transform(pose.pose);
     Eigen::Matrix4f robot_base_T_landmark = robot_base_T_cam_ * cam_T_landmark;
+    // Pose of landmark in world frame
+    Eigen::Matrix4f world_T_landmark = est_robot_pose_ * robot_base_T_landmark;
 
     // Convert the transform to a Pose2D
     slam::Localization::Pose2D landmark_meas = transform_2_pose2d(robot_base_T_landmark);
+    slam::Localization::Pose2D world_landmark_meas = transform_2_pose2d(world_T_landmark);
 
     // Updating the factor graph
-    localization_.add_landmark_measurement(landmark_id, landmark_meas.x, landmark_meas.y, landmark_meas.theta);
+    // Adds/stores a landmark measurement to iSAM2 and returns whether the factor graph can be optimized
+    bool optimize_graph = localization_.add_landmark_measurement(landmark_id, landmark_meas.x, landmark_meas.y, landmark_meas.theta,
+      world_landmark_meas.x, world_landmark_meas.y, world_landmark_meas.theta);
+
+    // If any of the landmark measurements enable optimization to happen, then denote that
+    if (optimize_graph)
+    {
+      can_optimize_graph = true;
+    }
   }
 
-  // Optimize the factor graph
-  localization_.optimize_factor_graph();
+  // Only optimize graph if safe to do so
+  if (can_optimize_graph)
+  {
+    // Optimize the factor graph
+    localization_.optimize_factor_graph();
 
-  // Get the estimated robot pose
-  slam::Localization::Pose2D est_robot_pose = localization_.get_est_robot_pose();
+    // Get the estimated robot pose
+    slam::Localization::Pose2D est_robot_pose = localization_.get_est_robot_pose();
 
-  // Publish pose estimate
-  est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose));
+    // Update estimated robot pose
+    est_robot_pose_ = pose2d_2_transform(est_robot_pose);
 
-  // TODO: need to update est_robot_pose_
+    // Publish pose estimate
+    est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose));
+  }
 }
 
 // Converts a ROS Geometry Pose msg into a Pose2D struct (flattens the 6DoF pose to Pose2D)
@@ -327,6 +346,26 @@ Eigen::Matrix4f Slam::pose_msg_2_transform(geometry_msgs::Pose pose_msg)
   trans(0) = position.x;
   trans(1) = position.y;
   trans(2) = position.z;
+  transform.topRightCorner(3,1) = trans;
+
+  return transform;
+}
+
+// Converts a Pose2D struct into an Eigen transform
+Eigen::Matrix4f Slam::pose2d_2_transform(slam::Localization::Pose2D pose2d)
+{
+  Eigen::Matrix4f transform;
+
+  tf::Quaternion tf_quat = tf::createQuaternionFromYaw(pose2d.theta);
+  Eigen::Quaterniond quat;
+  tf::quaternionTFToEigen(tf_quat, quat);
+  transform.topLeftCorner(3,3) = quat.toRotationMatrix().cast<float>();
+
+  // Updating the translation measurements
+  Eigen::Vector3f trans;
+  trans(0) = pose2d.x;
+  trans(1) = pose2d.y;
+  trans(2) = 0.0;
   transform.topRightCorner(3,1) = trans;
 
   return transform;

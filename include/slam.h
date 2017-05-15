@@ -70,6 +70,9 @@ class Slam
     // Converts a ROS Geometry Pose msg into an Eigen transform
     Eigen::Matrix4f pose_msg_2_transform(geometry_msgs::Pose pose_msg);
 
+    // Converts a Pose2D struct into an Eigen transform
+    Eigen::Matrix4f pose2d_2_transform(slam::Localization::Pose2D pose2d);
+
     // Converts a ROS Geometry Pose msg into a Pose2D struct (flattens the 6DoF pose to Pose2D)
     slam::Localization::Pose2D transform_2_pose2d(Eigen::Matrix4f transform);
 
