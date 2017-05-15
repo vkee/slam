@@ -2,6 +2,9 @@
 
 Slam::Slam()
 {
+  // Initial estimate is at the origin
+  est_robot_pose_ = Eigen::Matrix4f::Identity();
+
   // Get params
   get_params();
 
@@ -72,17 +75,30 @@ void Slam::get_params()
 
 void Slam::setup_subs_pubs_srvs()
 {
-  // Subscriber for odometry measurements (preprocessed laser scan matcher relative poses)
-  std::string odom_meas_topic;
-  int odom_meas_queue_size;
-  if (nh_.getParam("odom_meas_topic", odom_meas_topic) && nh_.getParam("odom_meas_queue_size", odom_meas_queue_size))
+  // // Subscriber for odometry measurements (preprocessed laser scan matcher relative poses)
+  // std::string odom_meas_topic;
+  // int odom_meas_queue_size;
+  // if (nh_.getParam("odom_meas_topic", odom_meas_topic) && nh_.getParam("odom_meas_queue_size", odom_meas_queue_size))
+  // {
+  //   odom_meas_sub_ = nh_.subscribe(odom_meas_topic, odom_meas_queue_size, &Slam::odom_meas_cb, this);
+  //   ROS_DEBUG("Odometry Measurement Topic %s Subscriber Loaded", odom_meas_topic.c_str());
+  // }
+  // else
+  // {
+  //   ROS_FATAL("Odometry Measurement Topic subscriber not loaded");
+  // }
+
+  // Subscriber for odometry measurements (using the estimated global poses)
+  std::string odom_meas_global_topic;
+  int odom_meas_global_queue_size;
+  if (nh_.getParam("odom_meas_global_topic", odom_meas_global_topic) && nh_.getParam("odom_meas_global_queue_size", odom_meas_global_queue_size))
   {
-    odom_meas_sub_ = nh_.subscribe(odom_meas_topic, odom_meas_queue_size, &Slam::odom_meas_cb, this);
-    ROS_DEBUG("Odometry Measurement Topic %s Subscriber Loaded", odom_meas_topic.c_str());
+    odom_meas_global_sub_ = nh_.subscribe(odom_meas_global_topic, odom_meas_global_queue_size, &Slam::robot_pose_est_cb, this);
+    ROS_DEBUG("Global Odometry Measurement Topic %s Subscriber Loaded", odom_meas_global_topic.c_str());
   }
   else
   {
-    ROS_FATAL("Odometry Measurement Topic subscriber not loaded");
+    ROS_FATAL("Global Odometry Measurement Topic subscriber not loaded");
   }
 
   // Subscriber for the landmark measurements (from AprilTag ROS node)
@@ -151,18 +167,41 @@ void Slam::init_localization()
     land_obs_trans_stddev_, land_obs_rot_stddev_);
 }
 
+// Callback for receiving the current estimated robot pose and adding the odometry measurement 
+void Slam::robot_pose_est_cb(const geometry_msgs::PoseStampedConstPtr& msg)
+{
+  geometry_msgs::PoseStamped est_robot_pose_msg = *msg;
+  std::cout << "est_robot_pose_msg: " << est_robot_pose_msg << std::endl;
+
+  // Getting the latest pose estimate
+  Eigen::Matrix4f new_est_robot_pose_ = pose_msg_2_transform(est_robot_pose_msg.pose);
+
+  // Getting the odometry measurement
+  Eigen::Matrix4f odom_meas_ = est_robot_pose_.inverse() * new_est_robot_pose_;
+  slam::Localization::Pose2D odom_meas_pose2d = transform_2_pose2d(est_robot_pose_);
+
+  // Updating the current estimated robot pose
+  est_robot_pose_ = new_est_robot_pose_;
+  slam::Localization::Pose2D est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
+
+  // Adding the odometry measurement to the factor graph
+  localization_.add_odom_measurement(odom_meas_pose2d.x, odom_meas_pose2d.y, odom_meas_pose2d.theta,
+    est_robot_pose2d.x, est_robot_pose2d.y, est_robot_pose2d.theta);
+
+  // Publish pose estimate
+  est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose2d));
+}
+
 // Callback for receiving the odometry msg
 void Slam::odom_meas_cb(const geometry_msgs::Pose2DConstPtr& msg)
 {
-  // NOTE: if too slow, to do this whole optimize, could probably just concatenate the odom on top of the est state to get new est robot pose state
+  // geometry_msgs::Pose2D odom_meas_msg = *msg;
+  // std::cout << "odom_meas_msg: " << odom_meas_msg << std::endl;
+  // // Adding the odometry measurement to the factor graph and optimizing the graph
+  // slam::Localization::Pose2D est_robot_pose = localization_.add_odom_measurement(odom_meas_msg.x, odom_meas_msg.y, odom_meas_msg.theta);
 
-  geometry_msgs::Pose2D odom_meas_msg = *msg;
-  std::cout << "odom_meas_msg: " << odom_meas_msg << std::endl;
-  // Adding the odometry measurement to the factor graph and optimizing the graph
-  slam::Localization::Pose2D est_robot_pose = localization_.add_odom_measurement(odom_meas_msg.x, odom_meas_msg.y, odom_meas_msg.theta);
-
-  // Publish pose estimate
-  est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose));
+  // // Publish pose estimate
+  // est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose));
 }
 
 // Callback for receiving the landmark measurement msg
@@ -199,6 +238,8 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
   // Publish pose estimate
   est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose));
+
+  // TODO: need to update est_robot_pose_
 }
 
 // Converts a ROS Geometry Pose msg into a Pose2D struct (flattens the 6DoF pose to Pose2D)

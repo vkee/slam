@@ -48,6 +48,11 @@ class Slam
     // Callback for receiving the odometry msg
     void odom_meas_cb(const geometry_msgs::Pose2DConstPtr& msg);
 
+    // Subscriber for odometry measurements (est global robot pose)
+    ros::Subscriber odom_meas_global_sub_;
+    // Callback for receiving the current estimated robot pose and adding the odometry measurement 
+    void robot_pose_est_cb(const geometry_msgs::PoseStampedConstPtr& msg);
+
     // Subscriber for landmark measurements (from AprilTag ROS node)
     ros::Subscriber landmark_meas_sub_;
     // Callback for receiving the landmark measurement msg
@@ -82,6 +87,9 @@ class Slam
 
     // Transform from robot base link to the camera frame
     Eigen::Matrix4f robot_base_T_cam_;
+
+    // Current estimated robot pose
+    Eigen::Matrix4f est_robot_pose_;
 
     // TF Object for dealing with reference frames
     tf::TransformListener tf_listener_;
