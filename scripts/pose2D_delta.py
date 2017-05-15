@@ -33,7 +33,9 @@ class SendPoseDelta():
 
         self.pose_delta_pub = rospy.Publisher(pose_delta_topic, Pose2D, queue_size=pose_delta_queue_size)
 
-        self.pose_stamped_pub = rospy.Publisher('/estimated_pose', PoseStamped, queue_size=1)
+        odom_meas_global_topic = rospy.get_param('odom_meas_global_topic', False)
+        odom_meas_global_queue_size = rospy.get_param('odom_meas_global_queue_size', 1)
+        self.pose_stamped_pub = rospy.Publisher(odom_meas_global_topic, PoseStamped, queue_size=odom_meas_global_queue_size)
 
         rospy.spin()
 
@@ -123,9 +125,7 @@ class SendPoseDelta():
 
         self.estimated_pose = Pose2D(x=self.estimated_pose.x+delta.x, y=self.estimated_pose.y+delta.y, 
                                         theta=self.estimated_pose.theta+delta.theta)
-        print 'Python Estimated Pose', self.estimated_pose
         self.convert_and_publish()
-
         self.pose_delta_pub.publish(delta)
 
 

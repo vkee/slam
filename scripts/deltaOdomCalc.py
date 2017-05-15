@@ -48,10 +48,13 @@ class deltaOdomCalc():
 		self.odom_sub = rospy.Subscriber('odom', Odometry, self.odom_callback)
 		# initialize publishers
 		# ---- For publishing the delta state ---------
-		delta_state = rospy.get_param('odom_meas_topic', False)
-		self.deltas_publisher = rospy.Publisher(delta_state, Pose2D)
+		odom_meas_topic = rospy.get_param('odom_meas_topic', False)
+		odom_meas_queue_size = rospy.get_param('odom_meas_queue_size', 1)
+		self.deltas_publisher = rospy.Publisher(odom_meas_topic, Pose2D, queue_size=odom_meas_queue_size)
 		# ---- For sanity check with rviz ---------
-		self.poseEstimateDeltas_publisher = rospy.Publisher('delta_estimated_state', PoseStamped)
+		odom_meas_global_topic = rospy.get_param('odom_meas_global_topic', False)
+		odom_meas_global_queue_size = rospy.get_param('odom_meas_global_queue_size', 1)
+		self.poseEstimateDeltas_publisher = rospy.Publisher(odom_meas_global_topic, PoseStamped, queue_size=odom_meas_global_queue_size)
 		# testing array
 		self.deltaHistory = []
 		self.initialPose = [0,0,0]
