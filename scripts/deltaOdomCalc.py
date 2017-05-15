@@ -51,6 +51,9 @@ class deltaOdomCalc():
 		odom_meas_topic = rospy.get_param('odom_meas_topic', False)
 		odom_meas_queue_size = rospy.get_param('odom_meas_queue_size', 1)
 		self.deltas_publisher = rospy.Publisher(odom_meas_topic, Pose2D, queue_size=odom_meas_queue_size)
+		# ---- PoseStamped deltas:
+		delta_odom_poseStamped_topic = rospy.get_param('delta_odom_posestamped', False)
+		self.deltas_poseStamped_publisher = rospy.Publisher(delta_odom_poseStamped_topic, PoseStamped, queue_size=odom_meas_queue_size)
 		# ---- For sanity check with rviz ---------
 		odom_meas_global_topic = rospy.get_param('odom_meas_global_topic', False)
 		odom_meas_global_queue_size = rospy.get_param('odom_meas_global_queue_size', 1)
@@ -107,20 +110,16 @@ class deltaOdomCalc():
 			deltas.y = msg.pose.pose.position.y - self.pastPose[1]
 			# store in array:
 			self.deltaHistory.append(deltas)
-			# Testing: ------
-			# deltas.x = 
-			# deltas.y = 
-			# Testing ------
 			deltas.theta = eulAng_orientation[2] - self.pastPose[2]
 			self.deltas_publisher.publish(deltas)
+			# -- transforma and publish delta as pose stamped:
+			convertedDelta = self.convert_2_pose_stamped(deltas)
+			self.deltas_poseStamped_publisher.publish(convertedDelta)
 			estimatedPose = Pose2D()
 			for e in self.deltaHistory:
 				estimatedPose.x += e.x
 				estimatedPose.y += e.y
 				estimatedPose.theta += e.theta
-			# estimatedPose.x = self.pastPose[0] + deltas.x
-			# estimatedPose.y = self.pastPose[1] + deltas.y
-			# estimatedPose.theta = self.pastPose[2] + deltas.theta
 			convertedEstimatedPose = self.convert_2_pose_stamped(estimatedPose)
 			# print convertedEstimatedPose
 			self.poseEstimateDeltas_publisher.publish(convertedEstimatedPose)
