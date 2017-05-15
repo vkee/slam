@@ -2,7 +2,7 @@
 slam_ros_loop_rate: 100
 
 # Frame ID 
-frame_id: map
+frame_id: odom
 
 # TF frames for getting the transform from base link to camera
 target_frame: base_link
@@ -24,7 +24,7 @@ est_robot_pose_topic: est_robot_pose
 est_robot_queue_size: 1
 
 # Laser Scan Matcher TF Frames
-fixed_frame: map
+fixed_frame: odom
 base_frame: base_link
 
 # Topic for Odometry Measurements (from preprocessing node)
@@ -42,3 +42,8 @@ odom_meas_global_queue_size: 1
 robot_odom_distance_threshold: 0.2 
 # angle difference trigger between poses to get a delta calculation [deg]
 robot_odom_yaw_threshold: 5
+
+
+# Converted LaserScan topic into PointCloud2 for the octomap server (runLaserGeomtery.py):
+laserscan_to_pointcloud_topic: cloud_in
+laserscan_topic: scan
