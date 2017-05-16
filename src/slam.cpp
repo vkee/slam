@@ -452,7 +452,7 @@ Eigen::Matrix4f Slam::pose_msg_2_transform(geometry_msgs::Pose pose_msg)
 // Converts a Pose2D struct into an Eigen transform
 Eigen::Matrix4f Slam::pose2d_2_transform(slam::Localization::Pose2D pose2d)
 {
-  Eigen::Matrix4f transform;
+  Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
 
   tf::Quaternion tf_quat = tf::createQuaternionFromYaw(pose2d.theta);
   Eigen::Quaterniond quat;
