@@ -71,6 +71,11 @@ void Slam::get_params()
   nh_.getParam("source_frame", source_frame_);
   // The target frame for the tf transformLookup
   nh_.getParam("target_frame", target_frame_);
+
+  // Getting the robot odometry distance threshold
+  nh_.getParam("robot_odom_distance_threshold", robot_odom_distance_threshold_);
+  // Multiplier of the robot_odom_distance_threshold for Max threshold that the GTSAM update can correct the pose
+  nh_.getParam("correction_factor", correction_factor_);
 }
 
 void Slam::setup_subs_pubs_srvs()
@@ -367,13 +372,24 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
     localization_.optimize_factor_graph();
 
     // Get the estimated robot pose
-    slam::Localization::Pose2D est_robot_pose = localization_.get_est_robot_pose();
+    slam::Localization::Pose2D new_est_robot_pose = localization_.get_est_robot_pose();
 
-    // Update estimated robot pose
-    est_robot_pose_ = pose2d_2_transform(est_robot_pose);
+    slam::Localization::Pose2D old_est_robot_pose = transform_2_pose2d(est_robot_pose_);
 
-    // Publish pose estimate
-    est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose));
+    double diff_x = new_est_robot_pose.x - old_est_robot_pose.x;
+    double diff_y = new_est_robot_pose.y - old_est_robot_pose.y;
+
+    double distance_change = sqrt(pow(diff_x, 2) + pow(diff_y, 2));
+
+    // Only update pose if the change in pose translationally wise is not too much
+    if (distance_change < correction_factor_*robot_odom_distance_threshold_)
+    {    
+      // Update estimated robot pose
+      est_robot_pose_ = pose2d_2_transform(new_est_robot_pose);
+
+      // Publish pose estimate
+      est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(new_est_robot_pose));
+    }
   }
 }
 

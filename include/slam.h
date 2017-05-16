@@ -117,6 +117,11 @@ class Slam
     // Standard deviation of the translation and rotation components of the landmark observations
     double land_obs_trans_stddev_;
     double land_obs_rot_stddev_;
+
+    // Getting the robot odometry distance threshold
+    double robot_odom_distance_threshold_;
+    // Multiplier of the robot_odom_distance_threshold for Max threshold that the GTSAM update can correct the pose
+    double correction_factor_;
 };
 
 #endif // SLAM_H

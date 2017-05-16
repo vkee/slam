@@ -1,6 +1,11 @@
+# Parameters for the robot's odometry calculation (deltaOdomCalc.py)
+# distance between poses to get a delta calculation [m]
+robot_odom_distance_threshold: 0.2 
+# angle difference trigger between poses to get a delta calculation [deg]
+robot_odom_yaw_threshold: 5
 
-
-
+# Multiplier of the robot_odom_distance_threshold for Max threshold that the GTSAM update can correct the pose
+correction_factor: 2.0
 
 # iSAM2 Parameters
 # Only relinearize variables whose linear delta magnitude is greater than this threshold (default: 0.1).
