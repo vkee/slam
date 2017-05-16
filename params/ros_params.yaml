@@ -37,13 +37,6 @@ odom_meas_global_topic: odom_meas_global_topic  # will be an abolute measurement
 # Queue size for Global Odometry Measurements
 odom_meas_global_queue_size: 1
 
-# Parameters for the robot's odometry calculation (deltaOdomCalc.py)
-# distance between poses to get a delta calculation [m]
-robot_odom_distance_threshold: 0.2 
-# angle difference trigger between poses to get a delta calculation [deg]
-robot_odom_yaw_threshold: 5
-
-
 # Converted LaserScan topic into PointCloud2 for the octomap server (runLaserGeomtery.py):
 laserscan_to_pointcloud_topic: cloud_in
 laserscan_topic: scan

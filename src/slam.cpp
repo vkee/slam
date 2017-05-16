@@ -26,9 +26,6 @@ Slam::Slam()
   {
     ROS_ERROR("Unable to find camera transform to base link, Slam node NOT initialized");
   }
-
-  // init_localization();
-  // ROS_INFO("Slam Node Initialized");
 }
 
 Slam::~Slam()
@@ -80,19 +77,6 @@ void Slam::get_params()
 
 void Slam::setup_subs_pubs_srvs()
 {
-  // // Subscriber for odometry measurements (preprocessed laser scan matcher relative poses)
-  // std::string odom_meas_topic;
-  // int odom_meas_queue_size;
-  // if (nh_.getParam("odom_meas_topic", odom_meas_topic) && nh_.getParam("odom_meas_queue_size", odom_meas_queue_size))
-  // {
-  //   odom_meas_sub_ = nh_.subscribe(odom_meas_topic, odom_meas_queue_size, &Slam::odom_meas_cb, this);
-  //   ROS_DEBUG("Odometry Measurement Topic %s Subscriber Loaded", odom_meas_topic.c_str());
-  // }
-  // else
-  // {
-  //   ROS_FATAL("Odometry Measurement Topic subscriber not loaded");
-  // }
-
   // Subscriber for odometry measurements (using the estimated global poses)
   std::string delta_odom_posestamped;
   int delta_odom_posestamped_queue_size;
@@ -263,8 +247,6 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
   apriltags_ros::AprilTagDetectionArray detections_array_msg = *msg;
   std::vector<apriltags_ros::AprilTagDetection> detections = detections_array_msg.detections;
 
-  std::cout << "detections.size(): " << detections.size() << std::endl;
-
   bool can_optimize_graph = false;
 
   for (int i = 0; i < detections.size(); i++)
@@ -283,12 +265,10 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
     Eigen::Matrix4f robot_base_T_landmark = robot_base_T_cam_ * cam_T_landmark;
     // Convert the transform to a Pose2D
     slam::Localization::Pose2D landmark_meas = transform_2_pose2d(robot_base_T_landmark);
-    std::cout << "Eigen: base_footprint_2_landmark x: " << landmark_meas.x << " y: " << landmark_meas.y << " theta: " << landmark_meas.theta << std::endl;
 
     // Pose of landmark in world frame
     Eigen::Matrix4f world_T_landmark = est_robot_pose_ * robot_base_T_landmark;
     slam::Localization::Pose2D world_landmark_meas = transform_2_pose2d(world_T_landmark);
-    std::cout << "Eigen: odom_2_landmark x: " << world_landmark_meas.x << " y: " << world_landmark_meas.y << " theta: " << world_landmark_meas.theta << std::endl;
 
     // Looking up transform using TF
     tf::StampedTransform robot_base_T_tag;
@@ -302,10 +282,8 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
       // Getting the translation vector
       tf::Vector3 tf_trans = robot_base_T_tag.getOrigin();
-      std::cout << "TF: base_footprint_2_landmark x: " << tf_trans.getX() << " y: " << tf_trans.getY() << " z: " << tf_trans.getZ() << std::endl;
       double theta = atan2(tf_trans.getY(), tf_trans.getX());
       double test_theta = rad_2_deg(theta); 
-      std::cout << "TF ATAN Theta: " << test_theta << std::endl;
 
       // Creating debug transform of the landmark measurement
       tf::Transform transform_land_meas;
@@ -329,17 +307,7 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
         tf::Vector3 tf_trans2 = odom_2_tag.getOrigin();
 
-        std::cout << "TF: odom_2_tag x: " << tf_trans2.getX() << " y: " << tf_trans2.getY() << " z: " << tf_trans2.getZ() << std::endl;
         double theta2 = atan2(tf_trans2.getY(), tf_trans2.getX());
-        double test_theta2 = rad_2_deg(theta);
-        std::cout << "TF ATAN Theta: " << test_theta2 << std::endl;
-
-        // Broadcasting tf for debugging - this should align with where the april tag is (well flattened)
-        // tf::Transform transform_br;
-        // transform_br.setOrigin( tf::Vector3(tf_trans2.getX(), tf_trans2.getY(), 0.0) );
-        // tf::Quaternion q;
-        // q.setRPY(0, 0, theta2);
-        // transform_br.setRotation(q);
 
         tf::Transform transform_br;
         transform_br.setOrigin( tf::Vector3(tf_trans2.getX(), tf_trans2.getY(), 0.0) );
