@@ -8,7 +8,7 @@ Panels:
         - /Status1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Pose1
+        - /Estimated State1
       Splitter Ratio: 0.5
     Tree Height: 310
   - Class: rviz/Selection
@@ -98,7 +98,13 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        a_frame:
+        april_tag_frame_id_1:
+          Value: true
+        april_tag_frame_id_1_est:
+          Value: true
+        april_tag_frame_id_1_est_land_meas:
+          Value: true
+        april_tag_frame_id_3:
           Value: true
         axis_camera_optical_frame:
           Value: true
@@ -119,8 +125,6 @@ Visualization Manager:
         imu:
           Value: true
         laser:
-          Value: true
-        map:
           Value: true
         odom:
           Value: true
@@ -152,10 +156,12 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          {}
         odom:
+          april_tag_frame_id_1_est:
+            {}
           base_footprint:
+            april_tag_frame_id_1_est_land_meas:
+              {}
             base_link:
               back_left_wheel:
                 {}
@@ -179,7 +185,9 @@ Visualization Manager:
                     {}
                   xtion_pro_cam_rgb_optical_frame:
                     axis_camera_optical_frame:
-                      a_frame:
+                      april_tag_frame_id_1:
+                        {}
+                      april_tag_frame_id_3:
                         {}
           imu:
             {}
@@ -214,11 +222,26 @@ Visualization Manager:
       Enabled: true
       Head Length: 0.3
       Head Radius: 0.1
-      Name: Pose
+      Name: Estimated State
       Shaft Length: 1
       Shaft Radius: 0.05
       Shape: Arrow
       Topic: /est_robot_pose
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.1
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.3
+      Head Radius: 0.1
+      Name: Odom State
+      Shaft Length: 1
+      Shaft Radius: 0.05
+      Shape: Arrow
+      Topic: /odom_meas_global_topic
       Unreliable: false
       Value: true
   Enabled: true
@@ -245,16 +268,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 9.05007
+      Distance: 5.42728
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 1.02383
+        Y: 0.299199
+        Z: 1.10582
       Name: Current View
       Near Clip Distance: 0.01
       Pitch: 0.6148

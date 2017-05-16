@@ -5,7 +5,7 @@ robot_odom_distance_threshold: 0.2
 robot_odom_yaw_threshold: 5
 
 # Multiplier of the robot_odom_distance_threshold for Max threshold that the GTSAM update can correct the pose
-correction_factor: 2.0
+correction_factor: 1.0
 
 # iSAM2 Parameters
 # Only relinearize variables whose linear delta magnitude is greater than this threshold (default: 0.1).
@@ -22,9 +22,9 @@ odom_trans_stddev: 0.05
 # Standard deviation of the rotation components of the robot odometry measurements [deg]
 odom_rot_stddev: 5
 # Standard deviation of the translation components of the landmark observations [m]
-land_obs_trans_stddev: 0.05
+land_obs_trans_stddev: 0.2
 # Standard deviation of the rotation components of the landmark observations [deg]
-land_obs_rot_stddev: 5
+land_obs_rot_stddev: 6
 
 # Laser Scan Matcher Node Parameters
 use_vel: true

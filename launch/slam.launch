@@ -29,10 +29,10 @@
 		</node>
 
 	 	<!-- Odometry Measurement Node -->
-		<!-- <node name="pose2D_delta" pkg="slam" type="pose2D_delta.py" respawn="true" output="screen"/> -->
+		<node name="pose2D_delta" pkg="slam" type="pose2D_delta.py" respawn="true" output="screen"/>
 
 	 	<!-- Odometry Measurement Node -->
-		<node name="pose2d_delta_odom" pkg="slam" type="deltaOdomCalc.py" respawn="true" output="screen"/>
+		<!-- <node name="pose2d_delta_odom" pkg="slam" type="deltaOdomCalc.py" respawn="true" output="screen"/> -->
 
 		<!--Launch april tags-->
 		<include file="$(find slam)/launch/run_apriltag_detection.launch"/>
