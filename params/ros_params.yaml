@@ -5,7 +5,7 @@ slam_ros_loop_rate: 100
 frame_id: odom
 
 # TF frames for getting the transform from base link to camera
-target_frame: base_link
+target_frame: base_footprint
 source_frame: axis_camera_optical_frame
 
 # Topic and Queue Size Parameters
@@ -25,7 +25,7 @@ est_robot_queue_size: 1
 
 # Laser Scan Matcher TF Frames
 fixed_frame: odom
-base_frame: base_link
+base_frame: base_footprint
 
 # Topic for Odometry Measurements (from preprocessing node)
 odom_meas_topic: odom_meas_topic  # will be a delta of Pose2D messages

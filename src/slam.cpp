@@ -305,6 +305,9 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
     std::cout << "landmark_id: " << landmark_id << std::endl;
     geometry_msgs::PoseStamped pose = indiv_detection.pose;
 
+    std::string april_tag_frame_id = "april_tag_frame_id_";
+    april_tag_frame_id = april_tag_frame_id + std::to_string(landmark_id);
+
     // Computing the transform from the robot base_link to the landmark
     Eigen::Matrix4f cam_T_landmark = pose_msg_2_transform(pose.pose);
 
@@ -348,19 +351,62 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
     // Convert the transform to a Pose2D
     slam::Localization::Pose2D landmark_meas = transform_2_pose2d(robot_base_T_landmark);
-    std::cout << "landmark_meas x: " << landmark_meas.x << " y: " << landmark_meas.y << " theta: " << landmark_meas.theta << std::endl;
+    std::cout << "old method landmark_meas x: " << landmark_meas.x << " y: " << landmark_meas.y << " theta: " << landmark_meas.theta << std::endl;
 
     slam::Localization::Pose2D world_landmark_meas = transform_2_pose2d(world_T_landmark);
 
-    // Updating the factor graph
-    // Adds/stores a landmark measurement to iSAM2 and returns whether the factor graph can be optimized
-    bool optimize_graph = localization_.add_landmark_measurement(landmark_id, landmark_meas.x, landmark_meas.y, landmark_meas.theta,
-      world_landmark_meas.x, world_landmark_meas.y, world_landmark_meas.theta);
+    // Looking up transform using TF
+    tf::StampedTransform robot_base_T_tag;
+    double curr_time = ros::Time::now().toSec();
 
-    // If any of the landmark measurements enable optimization to happen, then denote that
-    if (optimize_graph)
+    // Get the tf transform
+    bool success = tf_listener_.waitForTransform(target_frame_, april_tag_frame_id, ros::Time(0), ros::Duration(1.0));
+
+    if (success)
     {
-      can_optimize_graph = true;
+      // Get the tf transform
+      tf_listener_.lookupTransform(target_frame_, april_tag_frame_id, ros::Time(0), robot_base_T_tag);
+
+      // Getting the rotation matrix
+      Eigen::Quaterniond eigen_quat;
+      tf::quaternionTFToEigen(robot_base_T_tag.getRotation(), eigen_quat);  
+      Eigen::Matrix3d rot = eigen_quat.toRotationMatrix().cast<double>();
+
+      // Converting to KF state vector format
+      Eigen::Quaterniond quat(rot);
+      tf::Quaternion quat_tf;
+      tf::quaternionEigenToTF(quat, quat_tf);
+      // Convert quaternion matrix to roll, pitch, yaw (in radians)
+      double roll, pitch, yaw;
+      tf::Matrix3x3(quat_tf).getRPY(roll, pitch, yaw);
+      roll = rad_2_deg(roll);
+      pitch = rad_2_deg(pitch);
+      yaw = rad_2_deg(yaw);
+
+      std::cout << "TF Roll " << roll << " Pitch " << pitch << " Yaw " << yaw << std::endl;
+
+      // Getting the translation vector
+      tf::Vector3 tf_trans = robot_base_T_tag.getOrigin();
+      Eigen::Vector3f trans;
+      trans(0) = tf_trans.getX();
+      trans(1) = tf_trans.getY();
+      trans(2) = tf_trans.getZ();
+
+      std::cout << "tf x: " << tf_trans.getX() << " y: " << tf_trans.getY() << " z: " << tf_trans.getZ() << std::endl;
+      double theta = atan2(tf_trans.getY(), tf_trans.getX());
+      double test_theta = rad_2_deg(theta);
+      std::cout << "test_theta: " << test_theta << std::endl;
+
+      // Updating the factor graph
+      // Adds/stores a landmark measurement to iSAM2 and returns whether the factor graph can be optimized
+      bool optimize_graph = localization_.add_landmark_measurement(landmark_id, landmark_meas.x, landmark_meas.y, theta,
+        world_landmark_meas.x, world_landmark_meas.y, world_landmark_meas.theta);
+
+      // If any of the landmark measurements enable optimization to happen, then denote that
+      if (optimize_graph)
+      {
+        can_optimize_graph = true;
+      }
     }
   }
 
@@ -400,7 +446,7 @@ slam::Localization::Pose2D Slam::transform_2_pose2d(Eigen::Matrix4f transform)
   slam::Localization::Pose2D pose2d;
   pose2d.x = trans(0);
   pose2d.y = trans(1);
-  pose2d.theta = roll;
+  pose2d.theta = yaw;
 
   return pose2d;
 }
