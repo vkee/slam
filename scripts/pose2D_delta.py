@@ -14,7 +14,7 @@ class SendPoseDelta():
         self.angular_scaling = rospy.get_param("angular_scaling_correction", 1.0)
         self.noise_threshold = rospy.get_param("noise_threshold_correction", 0.01)
 
-        self.frame_id = rospy.get_param("frame_id", "map")
+        self.frame_id = rospy.get_param("frame_id", "odom")
 
         self.estimated_pose = Pose2D()  # Will allow us to compare how scrapping the values is helping us
         self.pose_delta     = Pose2D()

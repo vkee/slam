@@ -67,7 +67,7 @@ class deltaOdomCalc():
 
 	def convert_2_pose_stamped(self, data):
 	    pose_stamped_msg = PoseStamped()
-	    pose_stamped_msg.header.frame_id = 'map'
+	    pose_stamped_msg.header.frame_id = 'odom'
 	    pose_msg = Pose()
 	    pose_msg.position.x = data.x
 	    pose_msg.position.y = data.y
