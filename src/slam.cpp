@@ -275,58 +275,21 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
     // Computing the transform from the robot base_link to the landmark
     Eigen::Matrix4f cam_T_landmark = pose_msg_2_transform(pose.pose);
-
-
-
-//  // Getting the latest pose estimate
-//   Eigen::Matrix4f delta_robot_pose = pose_msg_2_transform(est_robot_delta_msg.pose);
-//   slam::Localization::Pose2D delta_robot_pose_2d = transform_2_pose2d(delta_robot_pose);
-
-
-//   Eigen::Matrix4f est_robot_pose_copy = est_robot_pose_;
-//   slam::Localization::Pose2D est_robot_pose2d_before = transform_2_pose2d(est_robot_pose_copy);
-
-//   // std::cout << "Start x: " << est_robot_pose2d_before.x << " Start y: " << est_robot_pose2d_before.y << " Start Theta: " << est_robot_pose2d_before.theta << std::endl;
-//   // Updating the current estimated robot pose
-//   est_robot_pose_ = est_robot_pose_ * delta_robot_pose;
-
-//   slam::Localization::Pose2D est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
-//   // std::cout << "1 Est x: " << est_robot_pose2d.x << " Est y: " << est_robot_pose2d.y << " Est Theta: " << est_robot_pose2d.theta << std::endl;
-
-
-// // Updating the translation measurements
-//   Eigen::Vector3d est_trans = est_robot_pose_copy.topRightCorner(3,1).cast<double>();
-
-//   // std::cout << "Est Trans: " << est_trans << std::endl;
-//   // std::cout << "Delta x: " << delta_robot_pose_2d.x << " Delta y: " << delta_robot_pose_2d.y << " Delta Theta: " << delta_robot_pose_2d.theta << std::endl;
-
-//   est_trans(0) = est_trans(0) + delta_robot_pose_2d.x;
-//   est_trans(1) = est_trans(1) + delta_robot_pose_2d.y;
-//   est_robot_pose_.topRightCorner(3,1) = est_trans.cast<float>();
-
-//   est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
-
-
     Eigen::Matrix4f robot_base_T_landmark = robot_base_T_cam_ * cam_T_landmark;
-
-    std::cout << "cam_T_landmark: " << cam_T_landmark << std::endl;
+    // Convert the transform to a Pose2D
+    slam::Localization::Pose2D landmark_meas = transform_2_pose2d(robot_base_T_landmark);
+    std::cout << "Eigen: base_footprint_2_landmark x: " << landmark_meas.x << " y: " << landmark_meas.y << " theta: " << landmark_meas.theta << std::endl;
 
     // Pose of landmark in world frame
     Eigen::Matrix4f world_T_landmark = est_robot_pose_ * robot_base_T_landmark;
-
-    // Convert the transform to a Pose2D
-    slam::Localization::Pose2D landmark_meas = transform_2_pose2d(robot_base_T_landmark);
-    std::cout << "old method landmark_meas x: " << landmark_meas.x << " y: " << landmark_meas.y << " theta: " << landmark_meas.theta << std::endl;
-
     slam::Localization::Pose2D world_landmark_meas = transform_2_pose2d(world_T_landmark);
+    std::cout << "Eigen: odom_2_landmark x: " << world_landmark_meas.x << " y: " << world_landmark_meas.y << " theta: " << world_landmark_meas.theta << std::endl;
 
     // Looking up transform using TF
     tf::StampedTransform robot_base_T_tag;
     double curr_time = ros::Time::now().toSec();
-
     // Get the tf transform
     bool success = tf_listener_.waitForTransform(target_frame_, april_tag_frame_id, ros::Time(0), ros::Duration(1.0));
-
     if (success)
     {
       // Get the tf transform
@@ -348,7 +311,7 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
       pitch = rad_2_deg(pitch);
       yaw = rad_2_deg(yaw);
 
-      std::cout << "TF Roll " << roll << " Pitch " << pitch << " Yaw " << yaw << std::endl;
+      std::cout << "TF: base_footprint_2_landmark Roll " << roll << " Pitch " << pitch << " Yaw " << yaw << std::endl;
 
       // Getting the translation vector
       tf::Vector3 tf_trans = robot_base_T_tag.getOrigin();
@@ -357,34 +320,68 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
       trans(1) = tf_trans.getY();
       trans(2) = tf_trans.getZ();
 
-      std::cout << "tf x: " << tf_trans.getX() << " y: " << tf_trans.getY() << " z: " << tf_trans.getZ() << std::endl;
+      std::cout << "TF: base_footprint_2_landmark x: " << tf_trans.getX() << " y: " << tf_trans.getY() << " z: " << tf_trans.getZ() << std::endl;
       double theta = atan2(tf_trans.getY(), tf_trans.getX());
       double test_theta = rad_2_deg(theta);
-      std::cout << "test_theta: " << test_theta << std::endl;
+      std::cout << "TF ATAN Theta: " << test_theta << std::endl;
 
       double x = tf_trans.getX();
       double y = tf_trans.getY();
 
       slam::Localization::Pose2D est_rob_2d = transform_2_pose2d(est_robot_pose_);
+      double est_rob_x = est_rob_2d.x;
+      double est_rob_y = est_rob_2d.y;
 
-      double x1 = est_rob_2d.x;
-      double y1 = est_rob_2d.y;
+      double manual_x = est_rob_x + x;
+      double manual_y = est_rob_y + y;
+      std::cout << "Eigen: odom_2_landmark x: " << manual_x << " y: " << manual_y << std::endl;
 
-      double manual_x = x1 + x;
-      double manual_y = y1 + y;
-      std::cout << "manual x: " << manual_x << " y: " << manual_y << std::endl;
-
-      std::cout << "world x: " << world_landmark_meas.x << " y: " << world_landmark_meas.y << " theta: " << world_landmark_meas.theta << std::endl;
-
-      // Updating the factor graph
-      // Adds/stores a landmark measurement to iSAM2 and returns whether the factor graph can be optimized
-      bool optimize_graph = localization_.add_landmark_measurement(landmark_id, landmark_meas.x, landmark_meas.y, theta,
-        manual_x, manual_y, world_landmark_meas.theta);
-
-      // If any of the landmark measurements enable optimization to happen, then denote that
-      if (optimize_graph)
+      // NOW LOOKING UP FROM ODOM TO THE APRIL TAG
+      // Looking up transform using TF
+      tf::StampedTransform odom_2_tag;
+      double curr_time = ros::Time::now().toSec();
+      // Get the tf transform
+      bool success2 = tf_listener_.waitForTransform("odom", april_tag_frame_id, ros::Time(0), ros::Duration(1.0));
+      if (success2)
       {
-        can_optimize_graph = true;
+        // Get the tf transform
+        tf_listener_.lookupTransform("odom", april_tag_frame_id, ros::Time(0), odom_2_tag);
+
+        // Getting the rotation matrix
+        Eigen::Quaterniond eigen_quat2;
+        tf::quaternionTFToEigen(odom_2_tag.getRotation(), eigen_quat2);  
+        Eigen::Matrix3d rot2 = eigen_quat2.toRotationMatrix().cast<double>();
+
+        // Converting to KF state vector format
+        Eigen::Quaterniond quat2(rot2);
+        tf::Quaternion quat_tf2;
+        tf::quaternionEigenToTF(quat2, quat_tf2);
+        // Convert quaternion matrix to roll, pitch, yaw (in radians)
+        double roll2, pitch2, yaw2;
+        tf::Matrix3x3(quat_tf2).getRPY(roll2, pitch2, yaw2);
+        roll2 = rad_2_deg(roll2);
+        pitch2 = rad_2_deg(pitch2);
+        yaw2 = rad_2_deg(yaw2);
+
+        std::cout << "TF: odom_2_tag Roll " << roll2 << " Pitch " << pitch2 << " Yaw " << yaw2 << std::endl;
+
+        tf::Vector3 tf_trans2 = robot_base_T_tag.getOrigin();
+
+        std::cout << "TF: odom_2_tag x: " << tf_trans2.getX() << " y: " << tf_trans2.getY() << " z: " << tf_trans2.getZ() << std::endl;
+        double theta2 = atan2(tf_trans2.getY(), tf_trans2.getX());
+        double test_theta2 = rad_2_deg(theta);
+        std::cout << "TF ATAN Theta: " << test_theta2 << std::endl;
+
+        // Updating the factor graph
+        // Adds/stores a landmark measurement to iSAM2 and returns whether the factor graph can be optimized
+        bool optimize_graph = localization_.add_landmark_measurement(landmark_id, landmark_meas.x, landmark_meas.y, theta,
+          tf_trans2.getX(), tf_trans2.getY(), theta2);
+
+        // If any of the landmark measurements enable optimization to happen, then denote that
+        if (optimize_graph)
+        {
+          can_optimize_graph = true;
+        }
       }
     }
   }
