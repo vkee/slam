@@ -17,9 +17,9 @@ odom_trans_stddev: 0.05
 # Standard deviation of the rotation components of the robot odometry measurements [deg]
 odom_rot_stddev: 5
 # Standard deviation of the translation components of the landmark observations [m]
-land_obs_trans_stddev: 0.05
+land_obs_trans_stddev: 5
 # Standard deviation of the rotation components of the landmark observations [deg]
-land_obs_rot_stddev: 15
+land_obs_rot_stddev: 500
 
 # Laser Scan Matcher Node Parameters
 use_vel: true

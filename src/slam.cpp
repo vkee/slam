@@ -230,7 +230,7 @@ void Slam::robot_pose_est_cb(const geometry_msgs::PoseStampedConstPtr& msg)
   est_trans(1) = est_trans(1) + delta_robot_pose_2d.y;
   est_robot_pose_.topRightCorner(3,1) = est_trans.cast<float>();
 
-  slam::Localization::Pose2D  est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
+  slam::Localization::Pose2D est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
 
   // Adding the odometry measurement to the factor graph
   localization_.add_odom_measurement(delta_robot_pose_2d.x, delta_robot_pose_2d.y, delta_robot_pose_2d.theta,
@@ -365,12 +365,29 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
         std::cout << "TF: odom_2_tag Roll " << roll2 << " Pitch " << pitch2 << " Yaw " << yaw2 << std::endl;
 
-        tf::Vector3 tf_trans2 = robot_base_T_tag.getOrigin();
+        tf::Vector3 tf_trans2 = odom_2_tag.getOrigin();
 
         std::cout << "TF: odom_2_tag x: " << tf_trans2.getX() << " y: " << tf_trans2.getY() << " z: " << tf_trans2.getZ() << std::endl;
         double theta2 = atan2(tf_trans2.getY(), tf_trans2.getX());
         double test_theta2 = rad_2_deg(theta);
         std::cout << "TF ATAN Theta: " << test_theta2 << std::endl;
+
+        // Broadcasting tf for debugging - this should align with where the april tag is (well flattened)
+        // tf::Transform transform_br;
+        // transform_br.setOrigin( tf::Vector3(tf_trans2.getX(), tf_trans2.getY(), 0.0) );
+        // tf::Quaternion q;
+        // q.setRPY(0, 0, theta2);
+        // transform_br.setRotation(q);
+
+        tf::Transform transform_br;
+        transform_br.setOrigin( tf::Vector3(tf_trans2.getX(), tf_trans2.getY(), 0.0) );
+        tf::Quaternion q;
+        q.setRPY(0, 0, theta2);
+        transform_br.setRotation(q);
+
+        april_tag_frame_id = april_tag_frame_id + "_est";
+
+        tf_broadcaster_.sendTransform(tf::StampedTransform(transform_br, ros::Time::now(), "odom", april_tag_frame_id));
 
         // Updating the factor graph
         // Adds/stores a landmark measurement to iSAM2 and returns whether the factor graph can be optimized

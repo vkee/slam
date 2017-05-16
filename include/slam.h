@@ -96,6 +96,10 @@ class Slam
 
     // TF Object for dealing with reference frames
     tf::TransformListener tf_listener_;
+
+    // TF Object for dealing with reference frames
+    tf::TransformBroadcaster tf_broadcaster_;
+
     // The source frame for the tf transformLookup
     std::string source_frame_;
     // The target frame for the tf transformLookup
