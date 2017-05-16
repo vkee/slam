@@ -295,46 +295,21 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
       // Get the tf transform
       tf_listener_.lookupTransform(target_frame_, april_tag_frame_id, ros::Time(0), robot_base_T_tag);
 
-      // Getting the rotation matrix
-      Eigen::Quaterniond eigen_quat;
-      tf::quaternionTFToEigen(robot_base_T_tag.getRotation(), eigen_quat);  
-      Eigen::Matrix3d rot = eigen_quat.toRotationMatrix().cast<double>();
-
-      // Converting to KF state vector format
-      Eigen::Quaterniond quat(rot);
-      tf::Quaternion quat_tf;
-      tf::quaternionEigenToTF(quat, quat_tf);
-      // Convert quaternion matrix to roll, pitch, yaw (in radians)
-      double roll, pitch, yaw;
-      tf::Matrix3x3(quat_tf).getRPY(roll, pitch, yaw);
-      roll = rad_2_deg(roll);
-      pitch = rad_2_deg(pitch);
-      yaw = rad_2_deg(yaw);
-
-      std::cout << "TF: base_footprint_2_landmark Roll " << roll << " Pitch " << pitch << " Yaw " << yaw << std::endl;
-
       // Getting the translation vector
       tf::Vector3 tf_trans = robot_base_T_tag.getOrigin();
-      Eigen::Vector3f trans;
-      trans(0) = tf_trans.getX();
-      trans(1) = tf_trans.getY();
-      trans(2) = tf_trans.getZ();
-
       std::cout << "TF: base_footprint_2_landmark x: " << tf_trans.getX() << " y: " << tf_trans.getY() << " z: " << tf_trans.getZ() << std::endl;
       double theta = atan2(tf_trans.getY(), tf_trans.getX());
-      double test_theta = rad_2_deg(theta);
+      double test_theta = rad_2_deg(theta); 
       std::cout << "TF ATAN Theta: " << test_theta << std::endl;
 
-      double x = tf_trans.getX();
-      double y = tf_trans.getY();
-
-      slam::Localization::Pose2D est_rob_2d = transform_2_pose2d(est_robot_pose_);
-      double est_rob_x = est_rob_2d.x;
-      double est_rob_y = est_rob_2d.y;
-
-      double manual_x = est_rob_x + x;
-      double manual_y = est_rob_y + y;
-      std::cout << "Eigen: odom_2_landmark x: " << manual_x << " y: " << manual_y << std::endl;
+      // Creating debug transform of the landmark measurement
+      tf::Transform transform_land_meas;
+      transform_land_meas.setOrigin( tf::Vector3(tf_trans.getX(), tf_trans.getY(), 0.0) );
+      tf::Quaternion q;
+      q.setRPY(0, 0, theta);
+      transform_land_meas.setRotation(q);
+      std::string april_tag_frame_id_name = april_tag_frame_id + "_est_land_meas";
+      tf_broadcaster_.sendTransform(tf::StampedTransform(transform_land_meas, ros::Time::now(), target_frame_, april_tag_frame_id_name));
 
       // NOW LOOKING UP FROM ODOM TO THE APRIL TAG
       // Looking up transform using TF
@@ -346,24 +321,6 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
       {
         // Get the tf transform
         tf_listener_.lookupTransform("odom", april_tag_frame_id, ros::Time(0), odom_2_tag);
-
-        // Getting the rotation matrix
-        Eigen::Quaterniond eigen_quat2;
-        tf::quaternionTFToEigen(odom_2_tag.getRotation(), eigen_quat2);  
-        Eigen::Matrix3d rot2 = eigen_quat2.toRotationMatrix().cast<double>();
-
-        // Converting to KF state vector format
-        Eigen::Quaterniond quat2(rot2);
-        tf::Quaternion quat_tf2;
-        tf::quaternionEigenToTF(quat2, quat_tf2);
-        // Convert quaternion matrix to roll, pitch, yaw (in radians)
-        double roll2, pitch2, yaw2;
-        tf::Matrix3x3(quat_tf2).getRPY(roll2, pitch2, yaw2);
-        roll2 = rad_2_deg(roll2);
-        pitch2 = rad_2_deg(pitch2);
-        yaw2 = rad_2_deg(yaw2);
-
-        std::cout << "TF: odom_2_tag Roll " << roll2 << " Pitch " << pitch2 << " Yaw " << yaw2 << std::endl;
 
         tf::Vector3 tf_trans2 = odom_2_tag.getOrigin();
 
@@ -391,7 +348,7 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
         // Updating the factor graph
         // Adds/stores a landmark measurement to iSAM2 and returns whether the factor graph can be optimized
-        bool optimize_graph = localization_.add_landmark_measurement(landmark_id, landmark_meas.x, landmark_meas.y, theta,
+        bool optimize_graph = localization_.add_landmark_measurement(landmark_id, tf_trans.getX(), tf_trans.getY(), theta,
           tf_trans2.getX(), tf_trans2.getY(), theta2);
 
         // If any of the landmark measurements enable optimization to happen, then denote that
