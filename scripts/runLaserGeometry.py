@@ -39,7 +39,7 @@ class LaserGeometryProjector():
 		self.laserScan_sub = rospy.Subscriber('scan', LaserScan, self.laserScan_callback)
 		# publishers:
 		pointCloudTopic = rospy.get_param('laserscan_to_pointcloud_topic', False)
-		self.pointCloud2_publisher = rospy.Publisher(pointCloudTopic, PointCloud2)
+		self.pointCloud2_publisher = rospy.Publisher(pointCloudTopic, PointCloud2, queue_size=1)
 		rospy.spin()
 
 

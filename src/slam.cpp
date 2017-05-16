@@ -218,32 +218,19 @@ void Slam::robot_pose_est_cb(const geometry_msgs::PoseStampedConstPtr& msg)
   Eigen::Matrix4f delta_robot_pose = pose_msg_2_transform(est_robot_delta_msg.pose);
   slam::Localization::Pose2D delta_robot_pose_2d = transform_2_pose2d(delta_robot_pose);
 
-
+  // Copy the estimated state
   Eigen::Matrix4f est_robot_pose_copy = est_robot_pose_;
-  slam::Localization::Pose2D est_robot_pose2d_before = transform_2_pose2d(est_robot_pose_copy);
 
-  // std::cout << "Start x: " << est_robot_pose2d_before.x << " Start y: " << est_robot_pose2d_before.y << " Start Theta: " << est_robot_pose2d_before.theta << std::endl;
   // Updating the current estimated robot pose
   est_robot_pose_ = est_robot_pose_ * delta_robot_pose;
 
-  slam::Localization::Pose2D est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
-  // std::cout << "1 Est x: " << est_robot_pose2d.x << " Est y: " << est_robot_pose2d.y << " Est Theta: " << est_robot_pose2d.theta << std::endl;
-
-
-// Updating the translation measurements
+  // Updating the translation measurements manually
   Eigen::Vector3d est_trans = est_robot_pose_copy.topRightCorner(3,1).cast<double>();
-
-  // std::cout << "Est Trans: " << est_trans << std::endl;
-  // std::cout << "Delta x: " << delta_robot_pose_2d.x << " Delta y: " << delta_robot_pose_2d.y << " Delta Theta: " << delta_robot_pose_2d.theta << std::endl;
-
   est_trans(0) = est_trans(0) + delta_robot_pose_2d.x;
   est_trans(1) = est_trans(1) + delta_robot_pose_2d.y;
   est_robot_pose_.topRightCorner(3,1) = est_trans.cast<float>();
 
-  est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
-
-  // std::cout << "2 Est x: " << est_robot_pose2d.x << " Est y: " << est_robot_pose2d.y << " Est Theta: " << est_robot_pose2d.theta << std::endl;
-
+  slam::Localization::Pose2D  est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
 
   // Adding the odometry measurement to the factor graph
   localization_.add_odom_measurement(delta_robot_pose_2d.x, delta_robot_pose_2d.y, delta_robot_pose_2d.theta,
@@ -251,28 +238,6 @@ void Slam::robot_pose_est_cb(const geometry_msgs::PoseStampedConstPtr& msg)
 
   // Publish pose estimate
   est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose2d));
-
-
-  // Working with Global
-  // geometry_msgs::PoseStamped est_robot_pose_msg = *msg;
-
-  // // Getting the latest pose estimate
-  // Eigen::Matrix4f new_est_robot_pose_ = pose_msg_2_transform(est_robot_pose_msg.pose);
-
-  // // Getting the odometry measurement
-  // Eigen::Matrix4f odom_meas_ = est_robot_pose_.inverse() * new_est_robot_pose_;
-  // slam::Localization::Pose2D odom_meas_pose2d = transform_2_pose2d(est_robot_pose_);
-
-  // // Updating the current estimated robot pose
-  // est_robot_pose_ = new_est_robot_pose_;
-  // slam::Localization::Pose2D est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
-
-  // // Adding the odometry measurement to the factor graph
-  // localization_.add_odom_measurement(odom_meas_pose2d.x, odom_meas_pose2d.y, odom_meas_pose2d.theta,
-  //   est_robot_pose2d.x, est_robot_pose2d.y, est_robot_pose2d.theta);
-
-  // // Publish pose estimate
-  // est_robot_pose_pub_.publish(pose2d_2_pose_stamped_msg(est_robot_pose2d));
 }
 
 // Callback for receiving the odometry msg
@@ -397,10 +362,24 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
       double test_theta = rad_2_deg(theta);
       std::cout << "test_theta: " << test_theta << std::endl;
 
+      double x = tf_trans.getX();
+      double y = tf_trans.getY();
+
+      slam::Localization::Pose2D est_rob_2d = transform_2_pose2d(est_robot_pose_);
+
+      double x1 = est_rob_2d.x;
+      double y1 = est_rob_2d.y;
+
+      double manual_x = x1 + x;
+      double manual_y = y1 + y;
+      std::cout << "manual x: " << manual_x << " y: " << manual_y << std::endl;
+
+      std::cout << "world x: " << world_landmark_meas.x << " y: " << world_landmark_meas.y << " theta: " << world_landmark_meas.theta << std::endl;
+
       // Updating the factor graph
       // Adds/stores a landmark measurement to iSAM2 and returns whether the factor graph can be optimized
       bool optimize_graph = localization_.add_landmark_measurement(landmark_id, landmark_meas.x, landmark_meas.y, theta,
-        world_landmark_meas.x, world_landmark_meas.y, world_landmark_meas.theta);
+        manual_x, manual_y, world_landmark_meas.theta);
 
       // If any of the landmark measurements enable optimization to happen, then denote that
       if (optimize_graph)
