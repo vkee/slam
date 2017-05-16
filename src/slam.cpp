@@ -176,9 +176,32 @@ void Slam::robot_pose_est_cb(const geometry_msgs::PoseStampedConstPtr& msg)
   Eigen::Matrix4f delta_robot_pose = pose_msg_2_transform(est_robot_delta_msg.pose);
   slam::Localization::Pose2D delta_robot_pose_2d = transform_2_pose2d(delta_robot_pose);
 
+
+  Eigen::Matrix4f est_robot_pose_copy = est_robot_pose_;
+  slam::Localization::Pose2D est_robot_pose2d_before = transform_2_pose2d(est_robot_pose_copy);
+
+  // std::cout << "Start x: " << est_robot_pose2d_before.x << " Start y: " << est_robot_pose2d_before.y << " Start Theta: " << est_robot_pose2d_before.theta << std::endl;
   // Updating the current estimated robot pose
   est_robot_pose_ = est_robot_pose_ * delta_robot_pose;
+
   slam::Localization::Pose2D est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
+  // std::cout << "1 Est x: " << est_robot_pose2d.x << " Est y: " << est_robot_pose2d.y << " Est Theta: " << est_robot_pose2d.theta << std::endl;
+
+
+// Updating the translation measurements
+  Eigen::Vector3d est_trans = est_robot_pose_copy.topRightCorner(3,1).cast<double>();
+
+  // std::cout << "Est Trans: " << est_trans << std::endl;
+  // std::cout << "Delta x: " << delta_robot_pose_2d.x << " Delta y: " << delta_robot_pose_2d.y << " Delta Theta: " << delta_robot_pose_2d.theta << std::endl;
+
+  est_trans(0) = est_trans(0) + delta_robot_pose_2d.x;
+  est_trans(1) = est_trans(1) + delta_robot_pose_2d.y;
+  est_robot_pose_.topRightCorner(3,1) = est_trans.cast<float>();
+
+  est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
+
+  // std::cout << "2 Est x: " << est_robot_pose2d.x << " Est y: " << est_robot_pose2d.y << " Est Theta: " << est_robot_pose2d.theta << std::endl;
+
 
   // Adding the odometry measurement to the factor graph
   localization_.add_odom_measurement(delta_robot_pose_2d.x, delta_robot_pose_2d.y, delta_robot_pose_2d.theta,
