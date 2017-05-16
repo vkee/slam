@@ -11,24 +11,24 @@ Slam::Slam()
   // Setup the subscribers and publishers
   setup_subs_pubs_srvs();
 
-  // // Lookup camera transform
-  // bool success = lookup_camera_transform();
+  // Lookup camera transform
+  bool success = lookup_camera_transform();
 
-  // if (success)
-  // {
-  //   // Initialize the GTSAM library
-  //   init_localization();
+  if (success)
+  {
+    // Initialize the GTSAM library
+    init_localization();
 
-  //   ROS_INFO("Slam Node Initialized");
-  // }
+    ROS_INFO("Slam Node Initialized");
+  }
 
-  // else
-  // {
-  //   ROS_ERROR("Unable to find camera transform to base link, Slam node NOT initialized");
-  // }
+  else
+  {
+    ROS_ERROR("Unable to find camera transform to base link, Slam node NOT initialized");
+  }
 
-  init_localization();
-  ROS_INFO("Slam Node Initialized");
+  // init_localization();
+  // ROS_INFO("Slam Node Initialized");
 }
 
 Slam::~Slam()
@@ -131,32 +131,74 @@ void Slam::setup_subs_pubs_srvs()
 // Returns true if successful
 bool Slam::lookup_camera_transform()
 {
-  tf::StampedTransform robot_base_T_cam;
-  double curr_time = ros::Time::now().toSec();
+  // tf::StampedTransform robot_base_T_cam;
+  // double curr_time = ros::Time::now().toSec();
 
-  // Get the tf transform
-  bool success = tf_listener_.waitForTransform(target_frame_, source_frame_, ros::Time(0), ros::Duration(5.0));
+  // // Get the tf transform
+  // bool success = tf_listener_.waitForTransform(target_frame_, source_frame_, ros::Time(0), ros::Duration(1.0));
 
-  if (success)
-  {
-    // Get the tf transform
-    tf_listener_.lookupTransform(target_frame_, source_frame_, ros::Time(0), robot_base_T_cam);
+  // if (success)
+  // {
+  //   // Get the tf transform
+  //   tf_listener_.lookupTransform(target_frame_, source_frame_, ros::Time(0), robot_base_T_cam);
 
-    // Getting the rotation matrix
-    Eigen::Quaterniond eigen_quat;
-    tf::quaternionTFToEigen(robot_base_T_cam.getRotation(), eigen_quat);
-    robot_base_T_cam_.topLeftCorner(3,3) = eigen_quat.toRotationMatrix().cast<float>();
+  //   // Getting the rotation matrix
+  //   Eigen::Quaterniond eigen_quat;
+  //   tf::quaternionTFToEigen(robot_base_T_cam.getRotation(), eigen_quat);
+  //   robot_base_T_cam_.topLeftCorner(3,3) = eigen_quat.toRotationMatrix().cast<float>();
 
-    // Getting the translation vector
-    tf::Vector3 tf_trans = robot_base_T_cam.getOrigin();
-    Eigen::Vector3f trans;
-    trans(0) = tf_trans.getX();
-    trans(1) = tf_trans.getY();
-    trans(2) = tf_trans.getZ();
-    robot_base_T_cam_.topRightCorner(3,1) = trans;
-  }
+  //   // Getting the translation vector
+  //   tf::Vector3 tf_trans = robot_base_T_cam.getOrigin();
+  //   Eigen::Vector3f trans;
+  //   trans(0) = tf_trans.getX();
+  //   trans(1) = tf_trans.getY();
+  //   trans(2) = tf_trans.getZ();
+  //   robot_base_T_cam_.topRightCorner(3,1) = trans;
 
-  return success;
+  //   std::cout << "translation x: " << trans(0) << " y: " << trans(1) << " z: " << trans(2) << std::endl;
+ 
+  //   Eigen::Matrix3d rot = robot_base_T_cam_.topLeftCorner(3,3).cast<double>();
+
+  //   // Converting to KF state vector format
+  //   Eigen::Quaterniond quat(rot);
+  //   tf::Quaternion quat_tf;
+  //   tf::quaternionEigenToTF(quat, quat_tf);
+  //   // Convert quaternion matrix to roll, pitch, yaw (in radians)
+  //   double roll, pitch, yaw;
+  //   tf::Matrix3x3(quat_tf).getRPY(roll, pitch, yaw);
+
+  //   std::cout << "Roll " << roll << " Pitch " << pitch << " Yaw " << yaw << std::endl;
+  // }
+
+  // else
+  // {
+  //   Eigen::Vector3f trans;
+  //   trans(0) = 0.371;
+  //   trans(1) = 0.0;
+  //   trans(2) = 0.187;
+  //   robot_base_T_cam_.topRightCorner(3,1) = trans;
+
+  //   tf::Quaternion quat_tf = tf::createQuaternionFromRPY(-1.5708, 0.0, -1.5708);
+
+  //   Eigen::Quaterniond eigen_quat;
+  //   tf::quaternionTFToEigen(tf_quat, eigen_quat);
+  //   robot_base_T_cam_.topLeftCorner(3,3) = eigen_quat.toRotationMatrix().cast<float>();
+  // }
+
+  // Hardcoded values 
+  Eigen::Vector3f trans;
+  trans(0) = 0.371;
+  trans(1) = 0.0;
+  trans(2) = 0.187;
+  robot_base_T_cam_.topRightCorner(3,1) = trans;
+
+  tf::Quaternion quat_tf = tf::createQuaternionFromRPY(-1.5708, 0.0, -1.5708);
+
+  Eigen::Quaterniond eigen_quat;
+  tf::quaternionTFToEigen(quat_tf, eigen_quat);
+  robot_base_T_cam_.topLeftCorner(3,3) = eigen_quat.toRotationMatrix().cast<float>();
+
+  return true;
 }
 
 // Initializes the GTSAM localization
@@ -265,12 +307,49 @@ void Slam::land_meas_cb(const apriltags_ros::AprilTagDetectionArrayConstPtr& msg
 
     // Computing the transform from the robot base_link to the landmark
     Eigen::Matrix4f cam_T_landmark = pose_msg_2_transform(pose.pose);
+
+
+
+//  // Getting the latest pose estimate
+//   Eigen::Matrix4f delta_robot_pose = pose_msg_2_transform(est_robot_delta_msg.pose);
+//   slam::Localization::Pose2D delta_robot_pose_2d = transform_2_pose2d(delta_robot_pose);
+
+
+//   Eigen::Matrix4f est_robot_pose_copy = est_robot_pose_;
+//   slam::Localization::Pose2D est_robot_pose2d_before = transform_2_pose2d(est_robot_pose_copy);
+
+//   // std::cout << "Start x: " << est_robot_pose2d_before.x << " Start y: " << est_robot_pose2d_before.y << " Start Theta: " << est_robot_pose2d_before.theta << std::endl;
+//   // Updating the current estimated robot pose
+//   est_robot_pose_ = est_robot_pose_ * delta_robot_pose;
+
+//   slam::Localization::Pose2D est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
+//   // std::cout << "1 Est x: " << est_robot_pose2d.x << " Est y: " << est_robot_pose2d.y << " Est Theta: " << est_robot_pose2d.theta << std::endl;
+
+
+// // Updating the translation measurements
+//   Eigen::Vector3d est_trans = est_robot_pose_copy.topRightCorner(3,1).cast<double>();
+
+//   // std::cout << "Est Trans: " << est_trans << std::endl;
+//   // std::cout << "Delta x: " << delta_robot_pose_2d.x << " Delta y: " << delta_robot_pose_2d.y << " Delta Theta: " << delta_robot_pose_2d.theta << std::endl;
+
+//   est_trans(0) = est_trans(0) + delta_robot_pose_2d.x;
+//   est_trans(1) = est_trans(1) + delta_robot_pose_2d.y;
+//   est_robot_pose_.topRightCorner(3,1) = est_trans.cast<float>();
+
+//   est_robot_pose2d = transform_2_pose2d(est_robot_pose_);
+
+
     Eigen::Matrix4f robot_base_T_landmark = robot_base_T_cam_ * cam_T_landmark;
+
+    std::cout << "cam_T_landmark: " << cam_T_landmark << std::endl;
+
     // Pose of landmark in world frame
     Eigen::Matrix4f world_T_landmark = est_robot_pose_ * robot_base_T_landmark;
 
     // Convert the transform to a Pose2D
     slam::Localization::Pose2D landmark_meas = transform_2_pose2d(robot_base_T_landmark);
+    std::cout << "landmark_meas x: " << landmark_meas.x << " y: " << landmark_meas.y << " theta: " << landmark_meas.theta << std::endl;
+
     slam::Localization::Pose2D world_landmark_meas = transform_2_pose2d(world_T_landmark);
 
     // Updating the factor graph
@@ -321,7 +400,7 @@ slam::Localization::Pose2D Slam::transform_2_pose2d(Eigen::Matrix4f transform)
   slam::Localization::Pose2D pose2d;
   pose2d.x = trans(0);
   pose2d.y = trans(1);
-  pose2d.theta = yaw;
+  pose2d.theta = roll;
 
   return pose2d;
 }
