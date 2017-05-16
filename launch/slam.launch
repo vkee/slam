@@ -35,7 +35,7 @@
 		<!-- <node name="pose2d_delta_odom" pkg="slam" type="deltaOdomCalc.py" respawn="true" output="screen"/> -->
 
 		<!--Launch april tags-->
-		<include file="$(find apriltags_ros)/launch/run_apriltag_detection.launch"/>
+		<include file="$(find slam)/launch/run_apriltag_detection.launch"/>
 
 		<!-- Laser Geometry Transform -->
 		<node name="laserToPointCloud2Converter" pkg="slam" type="runLaserGeometry.py" respawn="true" output="screen"/>
