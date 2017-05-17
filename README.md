@@ -22,10 +22,6 @@ Installing Octomap
 Installing GTSAM/iSAM2
 	- see slam_backend README
 
-Setting up launch files
-	- copy slam/launch/antonio_octomap.launch into `/opt/ros/indigo/share/octomap_server/launch` (you can get here with `roscd octomap_server`)
-	- copy slam/launch/run_apriltags_detection.launch into `apriltags_ros/apriltags_ros/launch` (most likely in catkin_ws/src)
-
 NOTE: Before launching SLAM, reset odom transform to the current robot location (Eric can do this). Make sure the robot is not moving
 
 Launching everything
